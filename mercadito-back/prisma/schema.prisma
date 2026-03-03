@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model comprobantes {
+  id_comprobante Int       @id @default(autoincrement())
+  id_pago        Int       @unique
+  archivo_url    String    @db.VarChar(255)
+  fecha_subida   DateTime? @default(now()) @db.Timestamp(6)
+  pagos          pagos     @relation(fields: [id_pago], references: [id_pago], onDelete: Cascade, map: "fk_comprobante_pago")
+}
+
+model espacios {
+  id_espacio     Int             @id @default(autoincrement())
+  id_mercadito   Int
+  numero_espacio String          @db.VarChar(10)
+  precio         Decimal         @db.Decimal(10, 2)
+  estado         estado_espacio? @default(disponible)
+  coordenada_x   Int?
+  coordenada_y   Int?
+  mercaditos     mercaditos      @relation(fields: [id_mercadito], references: [id_mercadito], onDelete: Cascade, map: "fk_espacio_mercadito")
+  solicitudes    solicitudes[]
+}
+
+model marcas {
+  id_marca       Int           @id @default(autoincrement())
+  id_usuario     Int
+  nombre_marca   String        @db.VarChar(150)
+  descripcion    String?
+  logo_url       String?       @db.VarChar(255)
+  instagram      String?       @db.VarChar(150)
+  facebook       String?       @db.VarChar(150)
+  tiktok         String?       @db.VarChar(150)
+  fecha_creacion DateTime?     @default(now()) @db.Timestamp(6)
+  usuarios       usuarios      @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, map: "fk_marca_usuario")
+  solicitudes    solicitudes[]
+}
+
+model mensajes_soporte {
+  id_mensaje  Int             @id @default(autoincrement())
+  id_usuario  Int
+  asunto      String          @db.VarChar(150)
+  mensaje     String
+  fecha_envio DateTime?       @default(now()) @db.Timestamp(6)
+  estado      estado_mensaje? @default(abierto)
+  usuarios    usuarios        @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, map: "fk_mensaje_usuario")
+}
+
+model mercaditos {
+  id_mercadito Int               @id @default(autoincrement())
+  nombre       String            @db.VarChar(150)
+  descripcion  String?
+  fecha        DateTime          @db.Date
+  hora_inicio  DateTime          @db.Time(6)
+  hora_fin     DateTime          @db.Time(6)
+  lugar        String            @db.VarChar(200)
+  croquis_url  String?           @db.VarChar(255)
+  estado       estado_mercadito? @default(activo)
+  espacios     espacios[]
+}
+
+model pagos {
+  id_pago           Int           @id @default(autoincrement())
+  id_solicitud      Int           @unique
+  monto             Decimal       @db.Decimal(10, 2)
+  metodo_pago       metodo_pago
+  fecha_pago        DateTime?     @default(now()) @db.Timestamp(6)
+  estado            estado_pago?  @default(pendiente)
+  id_admin_verifico Int?
+  referencia        String?       @db.VarChar(100)
+  comprobantes      comprobantes?
+  usuarios          usuarios?     @relation(fields: [id_admin_verifico], references: [id_usuario], map: "fk_pago_admin")
+  solicitudes       solicitudes   @relation(fields: [id_solicitud], references: [id_solicitud], onDelete: Cascade, map: "fk_pago_solicitud")
+}
+
+model preguntas_frecuentes {
+  id_pregunta Int      @id @default(autoincrement())
+  pregunta    String
+  respuesta   String
+  activa      Boolean? @default(true)
+}
+
+model solicitudes {
+  id_solicitud     Int               @id @default(autoincrement())
+  id_marca         Int
+  id_espacio       Int
+  fecha_solicitud  DateTime?         @default(now()) @db.Timestamp(6)
+  estado           estado_solicitud? @default(pendiente)
+  id_admin_gestion Int?
+  comentario_admin String?
+  pagos            pagos?
+  usuarios         usuarios?         @relation(fields: [id_admin_gestion], references: [id_usuario], map: "fk_solicitud_admin")
+  espacios         espacios          @relation(fields: [id_espacio], references: [id_espacio], onDelete: Cascade, map: "fk_solicitud_espacio")
+  marcas           marcas            @relation(fields: [id_marca], references: [id_marca], onDelete: Cascade, map: "fk_solicitud_marca")
+}
+
+model usuarios {
+  id_usuario       Int                @id @default(autoincrement())
+  nombre           String             @db.VarChar(100)
+  correo           String             @unique @db.VarChar(150)
+  contrasena       String             @db.VarChar(255)
+  telefono         String?            @db.VarChar(20)
+  rol              rol_usuario
+  activo           Boolean?           @default(true)
+  fecha_registro   DateTime?          @default(now()) @db.Timestamp(6)
+  marcas           marcas[]
+  mensajes_soporte mensajes_soporte[]
+  pagos            pagos[]
+  solicitudes      solicitudes[]
+}
+
+enum estado_espacio {
+  disponible
+  solicitado
+  ocupado
+}
+
+enum estado_mensaje {
+  abierto
+  respondido
+  cerrado
+}
+
+enum estado_mercadito {
+  activo
+  cerrado
+}
+
+enum estado_pago {
+  pendiente
+  verificado
+  rechazado
+}
+
+enum estado_solicitud {
+  pendiente
+  aceptada
+  rechazada
+}
+
+enum metodo_pago {
+  transferencia
+  deposito
+}
+
+enum rol_usuario {
+  visualizador
+  vendedor
+  admin
+}
