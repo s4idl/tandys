@@ -118,6 +118,7 @@ enum estado_espacio {
   disponible
   solicitado
   ocupado
+  pendiente_pago
 }
 
 enum estado_mensaje {
