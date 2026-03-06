@@ -2,6 +2,9 @@ import { Controller, Post, Body, UseGuards, Get, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
+import { Role  } from './enums/role.enum';
+
+
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
