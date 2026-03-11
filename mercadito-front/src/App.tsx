@@ -1,36 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import MarketMap from './features/map/marketMap';
+import Sidebar from './features/ui/Sidebar';
+import RequestModal from './features/ui/RequestModal';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+// ─── Placeholder pages ────────────────────────────────────────────────────────
+const Solicitudes = () => (
+  <div className="inner-page">
+    <h2>📂 Solicitudes</h2>
+    <p>Próximamente: gestión de solicitudes de espacios.</p>
+  </div>
+);
+
+const Pagos = () => (
+  <div className="inner-page">
+    <h2>💳 Mis Pagos</h2>
+    <p>Próximamente: historial y gestión de pagos.</p>
+  </div>
+);
+
+// ─── Map root page ────────────────────────────────────────────────────────────
+const MapPage = () => {
+  const [isAdmin, setIsAdmin] = useState(false);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="map-root">
+      {/* Full-screen canvas */}
+      <div className="canvas-layer">
+        <MarketMap isAdmin={isAdmin} />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-      
-    </>
-  )
+
+      {/* Floating sidebar on top */}
+      <Sidebar isAdmin={isAdmin} onToggleAdmin={() => setIsAdmin((v) => !v)} />
+
+      {/* Request modal — self-renders when an available space is selected */}
+      <RequestModal />
+    </div>
+  );
+};
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<MapPage />} />
+        <Route path="/solicitudes" element={<Solicitudes />} />
+        <Route path="/pagos" element={<Pagos />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
