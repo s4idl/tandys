@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { EspaciosModule } from './espacios/espacios.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { MarcasModule } from './marcas/marcas.module';
+import { PagosModule } from './pagos/pagos.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { MarcasModule } from './marcas/marcas.module';
     EspaciosModule,
     UsuariosModule,
     MarcasModule,
+    PagosModule,
   ],
 })
 export class AppModule { }
