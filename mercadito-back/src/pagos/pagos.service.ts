@@ -4,12 +4,24 @@ import {
     BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { CreatePagoDto } from './dto/create-pago.dto';
 import { VerificarPagoDto } from './dto/verificar-pago.dto';
 
 @Injectable()
 export class PagosService {
-    constructor(private prisma: PrismaService) { }
+    private supabase: SupabaseClient;
+
+    constructor(
+        private prisma: PrismaService,
+        private configService: ConfigService,
+    ) {
+        this.supabase = createClient(
+            this.configService.get<string>('SUPABASE_URL')!,
+            this.configService.get<string>('SUPABASE_KEY')!,
+        );
+    }
 
     // Vendedor registra un pago para su solicitud
     async create(dto: CreatePagoDto) {
@@ -110,8 +122,8 @@ export class PagosService {
         });
     }
 
-    // Vendedor/Admin: subir URL del comprobante
-    async subirComprobante(idPago: number, archivoUrl: string) {
+    // Vendedor/Admin: subir comprobante a Supabase Storage
+    async subirComprobante(idPago: number, file: Express.Multer.File) {
         const pago = await this.prisma.pagos.findUnique({
             where: { id_pago: idPago },
         });
@@ -119,6 +131,28 @@ export class PagosService {
         if (!pago) {
             throw new NotFoundException(`Pago con id ${idPago} no encontrado`);
         }
+
+        // 1. Crear nombre de archivo en Supabase
+        const fileExt = file.originalname.split('.').pop();
+        const fileName = `${idPago}-${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        // 2. Subir buffer
+        const { error } = await this.supabase.storage
+            .from('comprobants')
+            .upload(filePath, file.buffer, {
+                contentType: file.mimetype,
+                upsert: true,
+            });
+
+        if (error) {
+            throw new BadRequestException('Error al subir comprobante: ' + error.message);
+        }
+
+        // 3. Obtener URL pública
+        const { data: { publicUrl } } = this.supabase.storage
+            .from('comprobants')
+            .getPublicUrl(filePath);
 
         // Verificar que no exista ya un comprobante
         const comprobanteExistente = await this.prisma.comprobantes.findUnique({
@@ -129,14 +163,14 @@ export class PagosService {
             // Si ya existe, lo actualizamos
             return this.prisma.comprobantes.update({
                 where: { id_pago: idPago },
-                data: { archivo_url: archivoUrl },
+                data: { archivo_url: publicUrl },
             });
         }
 
         return this.prisma.comprobantes.create({
             data: {
                 id_pago: idPago,
-                archivo_url: archivoUrl,
+                archivo_url: publicUrl,
             },
         });
     }
