@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMapStore } from '../../store/mapStore';
+import tandyslogo from '../../assets/tandyslogo.png';
 
 interface SidebarProps {
     isAdmin: boolean;
@@ -21,19 +22,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isAdmin, onToggleAdmin }) => {
             alert(`El espacio ${selectedSpace.id} no está disponible.`);
             return;
         }
-        // The modal picks up selectedSpace from the store — just navigate or open
     };
 
     return (
         <aside className="sidebar">
             {/* Header */}
             <div className="sidebar-header">
-                <span className="sidebar-logo">🏪</span>
-                <div>
-                    <h1 className="sidebar-title">Mercadito</h1>
-                    <p className="sidebar-subtitle">Platform</p>
-                </div>
+                <img src={tandyslogo} alt="Tandys" className="sidebar-logo-img" />
             </div>
+
 
             {/* Selected space info */}
             {selectedSpace && (
@@ -60,26 +57,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isAdmin, onToggleAdmin }) => {
                     Nueva Solicitud
                 </button>
 
-                <button
-                    className="sidebar-btn"
-                    onClick={() => navigate('/pagos')}
-                >
+                <button className="sidebar-btn" onClick={() => navigate('/pagos')}>
                     <span className="btn-icon">💳</span>
                     Mis Pagos
                 </button>
 
-                <button
-                    className="sidebar-btn"
-                    onClick={() => navigate('/solicitudes')}
-                >
+                <button className="sidebar-btn" onClick={() => navigate('/solicitudes')}>
                     <span className="btn-icon">📂</span>
                     Solicitudes
                 </button>
 
-                <button
-                    className="sidebar-btn"
-                    onClick={() => alert('Soporte: soporte@mercadito.com')}
-                >
+                <button className="sidebar-btn" onClick={() => alert('Soporte: soporte@mercadito.com')}>
                     <span className="btn-icon">💬</span>
                     Soporte
                 </button>

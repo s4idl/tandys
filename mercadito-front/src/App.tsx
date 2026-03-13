@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import MarketMap from './features/map/marketMap';
 import Sidebar from './features/ui/Sidebar';
 import RequestModal from './features/ui/RequestModal';
+import RegisterBrandModal from './features/ui/RegisterBrandModal';
 import './App.css';
 
 // ─── Placeholder pages ────────────────────────────────────────────────────────
@@ -23,6 +24,7 @@ const Pagos = () => (
 // ─── Map root page ────────────────────────────────────────────────────────────
 const MapPage = () => {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showRegisterBrand, setShowRegisterBrand] = useState(false);
 
   return (
     <div className="map-root">
@@ -34,8 +36,21 @@ const MapPage = () => {
       {/* Floating sidebar on top */}
       <Sidebar isAdmin={isAdmin} onToggleAdmin={() => setIsAdmin((v) => !v)} />
 
+      {/* Top-right Registrar Marca button */}
+      <button
+        className="btn-registrar-marca-fixed"
+        onClick={() => setShowRegisterBrand(true)}
+      >
+        Registrar Marca
+      </button>
+
       {/* Request modal — self-renders when an available space is selected */}
       <RequestModal />
+
+      {/* Register brand modal */}
+      {showRegisterBrand && (
+        <RegisterBrandModal onClose={() => setShowRegisterBrand(false)} />
+      )}
     </div>
   );
 };
