@@ -8,7 +8,11 @@ import {
     Req,
     UseGuards,
     ParseIntPipe,
+    UseInterceptors,
+    UploadedFile,
+    BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { PagosService } from './pagos.service';
 import { CreatePagoDto } from './dto/create-pago.dto';
 import { VerificarPagoDto } from './dto/verificar-pago.dto';
@@ -58,14 +62,18 @@ export class PagosController {
         return this.pagosService.verificar(id, req.user.id, dto);
     }
 
-    // POST /api/pagos/:id/comprobante — vendedor sube el URL del comprobante
+    // POST /api/pagos/:id/comprobante — vendedor sube el archivo de comprobante
     @UseGuards(RolesGuard)
     @Roles(Role.VENDEDOR, Role.ADMIN)
     @Post(':id/comprobante')
+    @UseInterceptors(FileInterceptor('file'))
     subirComprobante(
         @Param('id', ParseIntPipe) id: number,
-        @Body('archivo_url') archivoUrl: string,
+        @UploadedFile() file: Express.Multer.File,
     ) {
-        return this.pagosService.subirComprobante(id, archivoUrl);
+        if (!file) {
+            throw new BadRequestException('Se requiere un archivo (file)');
+        }
+        return this.pagosService.subirComprobante(id, file);
     }
 }
