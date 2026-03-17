@@ -99,26 +99,63 @@ export class PagosService {
 
     // Admin: verificar o rechazar un pago
     async verificar(id: number, idAdmin: number, dto: VerificarPagoDto) {
-        const pago = await this.prisma.pagos.findUnique({
-            where: { id_pago: id },
-        });
+        return this.prisma.$transaction(async (tx) => {
+            const pago = await tx.pagos.findUnique({
+                where: { id_pago: id },
+                include: {
+                    solicitudes: true, // Necesitamos el id_espacio
+                },
+            });
 
-        if (!pago) {
-            throw new NotFoundException(`Pago con id ${id} no encontrado`);
-        }
+            if (!pago) {
+                throw new NotFoundException(`Pago con id ${id} no encontrado`);
+            }
 
-        if (pago.estado !== 'pendiente') {
-            throw new BadRequestException(
-                `El pago ya fue procesado con estado: ${pago.estado}`,
-            );
-        }
+            if (pago.estado !== 'pendiente') {
+                throw new BadRequestException(
+                    `El pago ya fue procesado con estado: ${pago.estado}`,
+                );
+            }
 
-        return this.prisma.pagos.update({
-            where: { id_pago: id },
-            data: {
-                estado: dto.estado,
-                id_admin_verifico: idAdmin,
-            },
+            // 1. Actualizar el estado del pago
+            const pagoActualizado = await tx.pagos.update({
+                where: { id_pago: id },
+                data: {
+                    estado: dto.estado,
+                    id_admin_verifico: idAdmin,
+                },
+            });
+
+            // 2. Lógica según el estado de la verificación
+            if (dto.estado === 'verificado') {
+                // Si se aprueba, el espacio pasa definitivamente a ocupado
+                await tx.espacios.update({
+                    where: { id_espacio: pago.solicitudes.id_espacio },
+                    data: { estado: 'ocupado' },
+                });
+                
+                // (Opcional) La solicitud ya debería estar en 'aceptada' desde antes, 
+                // pero si necesitaras confirmar algo más a nivel solicitud, sería aquí.
+
+            } else if (dto.estado === 'rechazado') {
+                // Si se rechaza (ej. comprobante falso), liberamos el espacio
+                await tx.espacios.update({
+                    where: { id_espacio: pago.solicitudes.id_espacio },
+                    data: { estado: 'disponible' },
+                });
+
+                // Rechazamos también la solicitud para cerrar el ciclo
+                await tx.solicitudes.update({
+                    where: { id_solicitud: pago.id_solicitud },
+                    data: { 
+                        estado: 'rechazada',
+                        comentario_admin: 'Pago rechazado. Comprobante inválido o no recibido.',
+                        id_admin_gestion: idAdmin,
+                    },
+                });
+            }
+
+            return pagoActualizado;
         });
     }
 
