@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import MarketMap from './features/map/marketMap';
-import Sidebar from './features/ui/Sidebar';
+import Navbar from './features/ui/Navbar';
+import type { UserType } from './features/ui/Navbar';
 import RequestModal from './features/ui/RequestModal';
 import RegisterBrandModal from './features/ui/RegisterBrandModal';
 import './App.css';
@@ -23,8 +24,10 @@ const Pagos = () => (
 
 // ─── Map root page ────────────────────────────────────────────────────────────
 const MapPage = () => {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [userType, setUserType] = useState<UserType>('user');
   const [showRegisterBrand, setShowRegisterBrand] = useState(false);
+
+  const isAdmin = userType === 'admin';
 
   return (
     <div className="map-root">
@@ -33,8 +36,8 @@ const MapPage = () => {
         <MarketMap isAdmin={isAdmin} />
       </div>
 
-      {/* Floating sidebar on top */}
-      <Sidebar isAdmin={isAdmin} onToggleAdmin={() => setIsAdmin((v) => !v)} />
+      {/* Floating tab bar + fixed logo */}
+      <Navbar userType={userType} onUserTypeChange={setUserType} />
 
       {/* Top-right Registrar Marca button */}
       <button
