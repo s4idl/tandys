@@ -45,7 +45,7 @@ const MapPage = () => {
       </button>
 
       {/* Request modal — self-renders when an available space is selected */}
-      <RequestModal />
+      <RequestModal isAdmin={isAdmin} />
 
       {/* Register brand modal */}
       {showRegisterBrand && (
