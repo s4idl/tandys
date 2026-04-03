@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { RotateCcw, Settings } from 'lucide-react';
 import { Stage, Layer, Rect, Image as KonvaImage, Text, Group, Transformer } from 'react-konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type Konva from 'konva';
@@ -16,7 +17,7 @@ const SVG_H = 600;
 const CLIP = { x: 2, y: 18, w: 589, h: 570 };
 
 const ZOOM_STEP = 1.12;
-const MIN_SCALE = 0.55;
+const MIN_SCALE = 1.55;
 const MAX_SCALE = 8;
 
 interface MarketMapProps { isAdmin?: boolean; }
@@ -78,13 +79,13 @@ const StallNode: React.FC<StallNodeProps> = ({
 
 // ── MarketMap ─────────────────────────────────────────────────────────────────
 const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
-  const spaces         = useMapStore((s) => s.spaces);
-  const selectedSpace  = useMapStore((s) => s.selectedSpace);
-  const addSpace       = useMapStore((s) => s.addSpace);
-  const updateSpace    = useMapStore((s) => s.updateSpace);
-  const selectSpace    = useMapStore((s) => s.selectSpace);
+  const spaces = useMapStore((s) => s.spaces);
+  const selectedSpace = useMapStore((s) => s.selectedSpace);
+  const addSpace = useMapStore((s) => s.addSpace);
+  const updateSpace = useMapStore((s) => s.updateSpace);
+  const selectSpace = useMapStore((s) => s.selectSpace);
   const generateLayout = useMapStore((s) => s.generateLayout);
-  const saveLayout     = useMapStore((s) => s.saveLayout);
+  const saveLayout = useMapStore((s) => s.saveLayout);
 
   const [stallCount, setStallCount] = useState(27);
 
@@ -96,6 +97,14 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
   const isPanning = useRef(false);
   const panLast = useRef({ x: 0, y: 0 });
   const [zoomLevel, setZoomLevel] = useState(100);
+  const [zoomVisible, setZoomVisible] = useState(false);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showZoom = () => {
+    setZoomVisible(true);
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => setZoomVisible(false), 2500);
+  };
 
   // ── Container size ──────────────────────────────────────────────────────────
   const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
@@ -174,6 +183,7 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
     stage.scale({ x: next, y: next });
     stage.position({ x: ptr.x - origin.x * next, y: ptr.y - origin.y * next });
     setZoomLevel(Math.round(next * 100));
+    showZoom();
   };
 
   // ── Pan (drag on empty stage) ───────────────────────────────────────────────
@@ -317,6 +327,7 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
           stage.scale({ x: next, y: next });
           stage.position({ x: cx - origin.x * next, y: cy - origin.y * next });
           setZoomLevel(Math.round(next * 100));
+          showZoom();
         };
 
         const resetZoom = () => {
@@ -327,57 +338,81 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
           stage.position({ x: (size.w - SVG_W * s) / 2, y: (size.h - SVG_H * s) / 2 });
           stage.batchDraw();
           setZoomLevel(Math.round(s * 100));
+          showZoom();
         };
 
         const btnStyle: React.CSSProperties = {
-          background: 'none', border: 'none', color: '#ffffffff',
-          fontSize: 16, cursor: 'pointer', padding: '0 6px',
-          opacity: 0.85, lineHeight: 1, display: 'flex', alignItems: 'center',
+          background: 'none',
+          border: 'none',
+          color: '#374151',
+          fontSize: 18,
+          fontWeight: 600,
+          cursor: 'pointer',
+          padding: '0 8px',
+          lineHeight: 1,
+          display: 'flex',
+          alignItems: 'center',
+          borderRadius: 8,
+          transition: 'background 0.15s',
         };
 
         return (
           <div style={{
-            position: 'absolute', bottom: 20, left: '50%',
+            position: 'absolute', bottom: 130, left: '50%',
             transform: 'translateX(-50%)',
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: 'rgba(20, 20, 20, 0.75)',
-            backdropFilter: 'blur(10px)',
+            display: 'flex', alignItems: 'center', gap: 4,
+            background: '#ffffff',
+            border: '1px solid #e5e7eb',
             borderRadius: 999,
-            padding: '6px 14px',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
-            zIndex: 5,
+            padding: '6px 12px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)',
+            zIndex: 15,
             userSelect: 'none',
             fontFamily: 'Inter, Arial, sans-serif',
+            opacity: zoomVisible ? 1 : 0,
+            pointerEvents: zoomVisible ? 'auto' : 'none',
+            transition: 'opacity 0.3s ease',
           }}>
             {/* Zoom out */}
             <button style={btnStyle} title="Alejar" onClick={() => zoomBy(-1)}>−</button>
 
+            {/* Divider */}
+            <div style={{ width: 1, height: 16, background: '#e5e7eb', margin: '0 2px' }} />
+
             {/* Progress bar + label */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 4px' }}>
               <div style={{
-                width: 100, height: 4, borderRadius: 999,
-                background: 'rgba(255,255,255,0.2)', overflow: 'hidden',
+                width: 80, height: 3, borderRadius: 999,
+                background: '#e5e7eb', overflow: 'hidden',
               }}>
                 <div style={{
                   width: `${clamp(pct)}%`, height: '100%',
-                  background: '#fff', borderRadius: 999,
-                  transition: 'width 0.1s',
+                  background: 'linear-gradient(90deg, #7b1430, #c8748a)',
+                  borderRadius: 999,
+                  transition: 'width 0.15s',
                 }} />
               </div>
-              <span style={{ color: '#fff', fontSize: 11, fontWeight: 600, minWidth: 34, textAlign: 'right' }}>
+              <span style={{ color: '#374151', fontSize: 11, fontWeight: 700, minWidth: 30, textAlign: 'right' }}>
                 {clamp(pct)}%
               </span>
             </div>
+
+            {/* Divider */}
+            <div style={{ width: 1, height: 16, background: '#e5e7eb', margin: '0 2px' }} />
 
             {/* Zoom in */}
             <button style={btnStyle} title="Acercar" onClick={() => zoomBy(1)}>+</button>
 
             {/* Divider */}
-            <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.2)' }} />
+            <div style={{ width: 1, height: 16, background: '#e5e7eb', margin: '0 2px' }} />
 
             {/* Reset */}
-            <button style={{ ...btnStyle, fontSize: 14 }} title="Restablecer vista" onClick={resetZoom}>
-              ⊙
+            <button
+              style={{ ...btnStyle, color: '#6b7280', padding: '0 6px' }}
+              title="Restablecer vista"
+              onClick={resetZoom}
+            >
+              <RotateCcw size={15} />
             </button>
           </div>
         );
@@ -387,81 +422,107 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
       {isAdmin && (
         <div style={{
           position: 'absolute', bottom: 20, right: 20,
-          background: 'rgba(15, 15, 20, 0.82)',
-          backdropFilter: 'blur(12px)',
-          borderRadius: 16,
-          padding: '14px 16px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
-          display: 'flex', flexDirection: 'column', gap: 12,
-          zIndex: 10, minWidth: 200,
+          background: '#ffffff',
+          border: '1px solid #e5e7eb',
+          borderRadius: 20,
+          padding: '16px 18px',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.10), 0 1px 6px rgba(0,0,0,0.06)',
+          display: 'flex', flexDirection: 'column', gap: 14,
+          zIndex: 10, minWidth: 210,
           fontFamily: 'Inter, Arial, sans-serif',
-          color: '#fff',
+          color: '#111827',
         }}>
           {/* Header */}
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
-            textTransform: 'uppercase', opacity: 0.55, borderBottom: '1px solid rgba(255,255,255,0.1)',
-            paddingBottom: 8 }}>
-            ⚙️ &nbsp;Auto Layout
+          <div style={{
+            fontSize: 10, fontWeight: 700, letterSpacing: '0.10em',
+            textTransform: 'uppercase', color: '#9ca3af',
+            borderBottom: '1px solid #f3f4f6',
+            paddingBottom: 10,
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            <Settings size={12} color="#9ca3af" />
+            Auto Layout
           </div>
 
           {/* Count selector */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <span style={{ fontSize: 12, opacity: 0.8 }}>Locales</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 13, fontWeight: 500, color: '#374151' }}>Locales</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <button
                 onClick={() => setStallCount((c) => Math.max(10, c - 1))}
-                style={{ width: 26, height: 26, borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)',
-                  background: 'rgba(255,255,255,0.07)', color: '#fff', fontSize: 16,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{
+                  width: 28, height: 28, borderRadius: 8,
+                  border: '1px solid #e5e7eb',
+                  background: '#f9fafb', color: '#374151', fontSize: 16,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#f9fafb')}
               >−</button>
-              <span style={{ fontSize: 18, fontWeight: 700, minWidth: 28, textAlign: 'center' }}>
+              <span style={{ fontSize: 20, fontWeight: 700, minWidth: 28, textAlign: 'center', color: '#111827' }}>
                 {stallCount}
               </span>
               <button
                 onClick={() => setStallCount((c) => Math.min(27, c + 1))}
-                style={{ width: 26, height: 26, borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)',
-                  background: 'rgba(255,255,255,0.07)', color: '#fff', fontSize: 16,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{
+                  width: 28, height: 28, borderRadius: 8,
+                  border: '1px solid #e5e7eb',
+                  background: '#f9fafb', color: '#374151', fontSize: 16,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = '#f9fafb')}
               >+</button>
             </div>
           </div>
 
-          {/* Range hint */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
-            <span style={{ fontSize: 10, opacity: 0.4 }}>mín 10</span>
-            <div style={{ flex: 1, height: 3, borderRadius: 999, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-              <div style={{ width: `${((stallCount - 10) / 17) * 100}%`, height: '100%',
-                background: 'rgba(255,255,255,0.5)', borderRadius: 999, transition: 'width 0.15s' }} />
+          {/* Range bar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 10, color: '#9ca3af', fontWeight: 500 }}>10</span>
+            <div style={{ flex: 1, height: 3, borderRadius: 999, background: '#f3f4f6', overflow: 'hidden' }}>
+              <div style={{
+                width: `${((stallCount - 10) / 17) * 100}%`, height: '100%',
+                background: 'linear-gradient(90deg, #7b1430, #c8748a)',
+                borderRadius: 999, transition: 'width 0.15s',
+              }} />
             </div>
-            <span style={{ fontSize: 10, opacity: 0.4 }}>máx 27</span>
+            <span style={{ fontSize: 10, color: '#9ca3af', fontWeight: 500 }}>27</span>
           </div>
 
-          {/* Auto Layout button */}
+          {/* Generar Layout button */}
           <button
             onClick={() => generateLayout(stallCount)}
-            style={{ padding: '9px 0', borderRadius: 10, border: 'none',
-              background: 'linear-gradient(135deg, #4CAF50, #2E7D32)',
+            style={{
+              padding: '10px 0', borderRadius: 12, border: 'none',
+              background: 'linear-gradient(135deg, #7b1430, #c8748a)',
               color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-              letterSpacing: '0.02em', transition: 'opacity 0.15s' }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
+              letterSpacing: '0.02em', transition: 'opacity 0.15s',
+              boxShadow: '0 2px 10px rgba(123,20,48,0.25)',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.88')}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
           >
-            🗺️ &nbsp;Generar Layout
+            Generar Layout
           </button>
 
-          {/* Save button */}
+          {/* Guardar Layout button */}
           <button
             onClick={() => { saveLayout(); alert('Layout guardado ✓ (ver consola)'); }}
-            style={{ padding: '9px 0', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)',
-              background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 12,
-              fontWeight: 600, cursor: 'pointer', transition: 'opacity 0.15s' }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.75')}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+            style={{
+              padding: '9px 0', borderRadius: 12,
+              border: '1px solid #e5e7eb',
+              background: '#f9fafb', color: '#374151', fontSize: 12,
+              fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = '#f9fafb')}
           >
             💾 &nbsp;Guardar Layout
           </button>
 
-          <p style={{ fontSize: 10, opacity: 0.35, textAlign: 'center', margin: 0 }}>
+          <p style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', margin: 0 }}>
             Arrastra los locales para ajustar
           </p>
         </div>
