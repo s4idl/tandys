@@ -1,188 +1,474 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Stage, Layer, Rect, Text, Group } from 'react-konva';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { Stage, Layer, Rect, Image as KonvaImage, Text, Group, Transformer } from 'react-konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type Konva from 'konva';
-import { useMapStore } from '../../store/mapStore';
-import type { Space, SpaceStatus } from '../../types';
+import { useMapStore, STATUS_COLORS } from '../../store/mapStore';
+import type { Space } from '../../types';
+import svgUrl from '../../assets/mapa-maestro.svg';
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
-const FLOOR_BG = '#f0f2f5';
-const GRID_COLOR = '#dde1e7';
-const CORRIDOR_BG = '#e2e6ea';
+// ── SVG canvas dimensions & content crop ─────────────────────────────────────
+// The SVG canvas is 800×600 but actual drawing content sits within:
+//   x: 2 – 591  (outer frame at x=0 & x=593 is clipped out)
+//   y: 18 – 588 (outer frame at y=16 & y=590 is clipped out)
+const SVG_W = 800;
+const SVG_H = 600;
+// Clip rect that hides the CAD border paths
+const CLIP = { x: 2, y: 18, w: 589, h: 570 };
 
-const STATUS: Record<SpaceStatus, { fill: string; stroke: string; textColor: string }> = {
-    available: { fill: '#4CAF50', stroke: '#2E7D32', textColor: '#fff' },
-    occupied: { fill: '#F44336', stroke: '#B71C1C', textColor: '#fff' },
-    pending: { fill: '#FFEB3B', stroke: '#F57F17', textColor: '#333' },
-};
+const ZOOM_STEP = 1.12;
+const MIN_SCALE = 0.55;
+const MAX_SCALE = 8;
 
-// ─── Props ────────────────────────────────────────────────────────────────────
-interface MarketMapProps {
-    isAdmin?: boolean;
+interface MarketMapProps { isAdmin?: boolean; }
+
+// ── StallNode ─────────────────────────────────────────────────────────────────
+interface StallNodeProps {
+  space: Space;
+  isAdmin: boolean;
+  isSelected: boolean;
+  shapeRef: (el: Konva.Rect | null) => void;
+  onSelect: (s: Space) => void;
+  onGroupDragEnd: (e: KonvaEventObject<DragEvent>) => void;
+  onTransformEnd: () => void;
+  setCursor: (c: string) => void;
 }
 
-// ─── SpaceNode ────────────────────────────────────────────────────────────────
-interface SpaceNodeProps {
-    space: Space;
-    isAdmin: boolean;
-    isSelected: boolean;
-    onSelect: (space: Space) => void;
-    onDragFinish: (id: string, x: number, y: number) => void;
-    setCursor: (c: string) => void;
-}
-
-const SpaceNode: React.FC<SpaceNodeProps> = ({
-    space, isAdmin, isSelected, onSelect, onDragFinish, setCursor,
+const StallNode: React.FC<StallNodeProps> = ({
+  space, isAdmin, isSelected, shapeRef, onSelect, onGroupDragEnd, onTransformEnd, setCursor,
 }) => {
-    const [isDragging, setIsDragging] = useState(false);
-    const { fill, stroke, textColor } = STATUS[space.status];
-
-    return (
-        <Group
-            x={space.x}
-            y={space.y}
-            draggable={isAdmin}
-            onDragStart={() => { setIsDragging(true); setCursor('grabbing'); }}
-            onDragEnd={(e: KonvaEventObject<DragEvent>) => {
-                setIsDragging(false);
-                setCursor('grab');
-                onDragFinish(space.id, e.target.x(), e.target.y());
-            }}
-            onClick={() => onSelect(space)}
-            onTap={() => onSelect(space)}
-            onMouseEnter={() => setCursor(isAdmin ? 'grab' : 'pointer')}
-            onMouseLeave={() => { if (!isDragging) setCursor('default'); }}
-        >
-            {/* Static drop shadow */}
-            <Rect
-                x={3} y={4}
-                width={space.width} height={space.height}
-                fill="rgba(0,0,0,0.10)"
-                cornerRadius={6}
-                listening={false}
-            />
-
-            {/* Main rect */}
-            <Rect
-                width={space.width}
-                height={space.height}
-                fill={fill}
-                stroke={isSelected ? '#1565C0' : stroke}
-                strokeWidth={isSelected ? 3 : (isDragging ? 2.5 : 1.5)}
-                cornerRadius={6}
-                shadowEnabled={isDragging || isSelected}
-                shadowBlur={isDragging ? 20 : (isSelected ? 12 : 0)}
-                shadowColor={isSelected ? 'rgba(21,101,192,0.5)' : 'rgba(0,0,0,0.3)'}
-                shadowOffsetY={isDragging ? 8 : 0}
-                opacity={isDragging ? 0.9 : 1}
-            />
-
-            {/* Label */}
-            {space.label && (
-                <Text
-                    text={space.label}
-                    width={space.width}
-                    height={space.height}
-                    align="center"
-                    verticalAlign="middle"
-                    fontSize={12}
-                    fontStyle="bold"
-                    fontFamily="Inter, Arial, sans-serif"
-                    fill={textColor}
-                    listening={false}
-                />
-            )}
-        </Group>
-    );
+  const { fill, stroke, textColor } = STATUS_COLORS[space.status];
+  return (
+    <Group
+      x={space.x} y={space.y}
+      draggable={isAdmin}
+      onDragStart={() => setCursor('grabbing')}
+      onDragEnd={onGroupDragEnd}
+      onClick={() => onSelect(space)}
+      onTap={() => onSelect(space)}
+      onMouseEnter={() => setCursor(isAdmin ? 'grab' : 'pointer')}
+      onMouseLeave={() => setCursor('default')}
+    >
+      <Rect
+        ref={shapeRef}
+        width={space.width} height={space.height}
+        rotation={space.rotation}
+        fill={fill}
+        stroke={isSelected ? '#1565C0' : stroke}
+        strokeWidth={isSelected ? 2 : 1}
+        cornerRadius={3}
+        onTransformEnd={onTransformEnd}
+        shadowEnabled={isSelected}
+        shadowBlur={10}
+        shadowColor="rgba(21,101,192,0.4)"
+      />
+      <Text
+        text={space.label ?? space.id}
+        rotation={space.rotation}
+        width={space.width} height={space.height}
+        align="center" verticalAlign="middle"
+        fontSize={Math.max(6, Math.min(space.width, space.height) * 0.28)}
+        fontStyle="bold"
+        fontFamily="Inter, Arial, sans-serif"
+        fill={textColor}
+        listening={false}
+      />
+    </Group>
+  );
 };
 
-// ─── MarketMap ────────────────────────────────────────────────────────────────
+// ── MarketMap ─────────────────────────────────────────────────────────────────
 const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
-    const spaces = useMapStore((s) => s.spaces);
-    const selectedSpace = useMapStore((s) => s.selectedSpace);
-    const updateSpacePosition = useMapStore((s) => s.updateSpacePosition);
-    const selectSpace = useMapStore((s) => s.selectSpace);
+  const spaces         = useMapStore((s) => s.spaces);
+  const selectedSpace  = useMapStore((s) => s.selectedSpace);
+  const addSpace       = useMapStore((s) => s.addSpace);
+  const updateSpace    = useMapStore((s) => s.updateSpace);
+  const selectSpace    = useMapStore((s) => s.selectSpace);
+  const generateLayout = useMapStore((s) => s.generateLayout);
+  const saveLayout     = useMapStore((s) => s.saveLayout);
 
-    const stageRef = useRef<Konva.Stage>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const [stallCount, setStallCount] = useState(27);
 
-    // Resize the stage when the window changes
-    useEffect(() => {
-        const onResize = () => {
-            if (containerRef.current) {
-                setSize({
-                    width: containerRef.current.offsetWidth,
-                    height: containerRef.current.offsetHeight,
-                });
-            }
-        };
-        onResize();
-        window.addEventListener('resize', onResize);
-        return () => window.removeEventListener('resize', onResize);
-    }, []);
+  const stageRef = useRef<Konva.Stage>(null);
+  const trRef = useRef<Konva.Transformer>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const shapeRefs = useRef<Map<string, Konva.Rect>>(new Map());
+  const initialized = useRef(false);
+  const isPanning = useRef(false);
+  const panLast = useRef({ x: 0, y: 0 });
+  const [zoomLevel, setZoomLevel] = useState(100);
 
-    const setCursor = (cursor: string) => {
-        const container = stageRef.current?.container();
-        if (container) container.style.cursor = cursor;
+  // ── Container size ──────────────────────────────────────────────────────────
+  const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
+  useEffect(() => {
+    const measure = () => {
+      if (containerRef.current)
+        setSize({ w: containerRef.current.offsetWidth, h: containerRef.current.offsetHeight });
     };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
 
-    // ── Corridor band ──────────────────────────────────────────────────────────
-    // Find the Y-range between the two rows from the store layout
-    const topRow = spaces.filter((s) => s.id.startsWith('T'));
-    const bottomRow = spaces.filter((s) => s.id.startsWith('B'));
-    const corridorY = topRow.length
-        ? Math.max(...topRow.map((s) => s.y + s.height)) + 10
-        : 150;
-    const corridorH = bottomRow.length
-        ? (Math.min(...bottomRow.map((s) => s.y)) - corridorY) - 10
-        : 60;
+  // Prevent native scroll on wheel over the map
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const noop = (e: WheelEvent) => e.preventDefault();
+    el.addEventListener('wheel', noop, { passive: false });
+    return () => el.removeEventListener('wheel', noop);
+  }, []);
 
-    // ── Grid ──────────────────────────────────────────────────────────────────
-    const gridStep = 40;
-    const gridEls: React.ReactNode[] = [];
-    for (let x = gridStep; x < size.width; x += gridStep) {
-        gridEls.push(<Rect key={`v${x}`} x={x} y={0} width={1} height={size.height} fill={GRID_COLOR} listening={false} />);
+  // ── SVG background ─────────────────────────────────────────────────────────
+  const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null);
+  useEffect(() => {
+    const img = new window.Image();
+    img.src = svgUrl;
+    img.onload = () => setBgImage(img);
+  }, []);
+
+  // ── Initial stage transform: fit + centre SVG (runs once after size known) ──
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage || initialized.current || size.w === 0) return;
+    initialized.current = true;
+    const s = Math.min(size.w / SVG_W, size.h / SVG_H) * 0.95; // slight padding
+    stage.scale({ x: s, y: s });
+    stage.position({
+      x: (size.w - SVG_W * s) / 2,
+      y: (size.h - SVG_H * s) / 2,
+    });
+    stage.batchDraw();
+  }, [size]);
+
+
+
+  // ── Transformer wiring ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!trRef.current) return;
+    if (!isAdmin || !selectedSpace) {
+      trRef.current.nodes([]);
+      trRef.current.getLayer()?.batchDraw();
+      return;
     }
-    for (let y = gridStep; y < size.height; y += gridStep) {
-        gridEls.push(<Rect key={`h${y}`} x={0} y={y} width={size.width} height={1} fill={GRID_COLOR} listening={false} />);
+    const node = shapeRefs.current.get(selectedSpace.id);
+    if (node) {
+      trRef.current.nodes([node]);
+      trRef.current.getLayer()?.batchDraw();
     }
+  }, [selectedSpace, isAdmin]);
 
-    return (
-        <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
-            <Stage ref={stageRef} width={size.width} height={size.height}>
-                {/* ── Background layer ── */}
-                <Layer listening={false}>
-                    <Rect x={0} y={0} width={size.width} height={size.height} fill={FLOOR_BG} />
-                    {gridEls}
-                    {/* Corridor band */}
-                    {corridorH > 0 && (
-                        <Rect
-                            x={0} y={corridorY}
-                            width={size.width} height={corridorH + 14}
-                            fill={CORRIDOR_BG}
-                            listening={false}
-                        />
-                    )}
-                </Layer>
+  const setCursor = useCallback((c: string) => {
+    const el = stageRef.current?.container();
+    if (el) el.style.cursor = c;
+  }, []);
 
-                {/* ── Spaces layer ── */}
-                <Layer>
-                    {spaces.map((space) => (
-                        <SpaceNode
-                            key={space.id}
-                            space={space}
-                            isAdmin={isAdmin}
-                            isSelected={selectedSpace?.id === space.id}
-                            onSelect={selectSpace}
-                            onDragFinish={updateSpacePosition}
-                            setCursor={setCursor}
-                        />
-                    ))}
-                </Layer>
-            </Stage>
+  // ── Wheel zoom (zoom towards cursor) ────────────────────────────────────────
+  const handleWheel = (e: KonvaEventObject<WheelEvent>) => {
+    e.evt.preventDefault();
+    const stage = stageRef.current!;
+    const old = stage.scaleX();
+    const ptr = stage.getPointerPosition()!;
+    const origin = { x: (ptr.x - stage.x()) / old, y: (ptr.y - stage.y()) / old };
+    const dir = e.evt.deltaY > 0 ? -1 : 1;
+    const next = Math.max(MIN_SCALE, Math.min(MAX_SCALE, old * Math.pow(ZOOM_STEP, dir)));
+    stage.scale({ x: next, y: next });
+    stage.position({ x: ptr.x - origin.x * next, y: ptr.y - origin.y * next });
+    setZoomLevel(Math.round(next * 100));
+  };
+
+  // ── Pan (drag on empty stage) ───────────────────────────────────────────────
+  const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
+    if (e.target !== e.target.getStage()) return;
+    isPanning.current = true;
+    panLast.current = stageRef.current!.getPointerPosition()!;
+    setCursor('grabbing');
+  };
+
+  const handleMouseMove = () => {
+    if (!isPanning.current) return;
+    const stage = stageRef.current!;
+    const p = stage.getPointerPosition()!;
+    stage.position({
+      x: stage.x() + (p.x - panLast.current.x),
+      y: stage.y() + (p.y - panLast.current.y),
+    });
+    panLast.current = p;
+  };
+
+  const stopPan = () => { isPanning.current = false; setCursor('default'); };
+
+  // ── Click on empty stage: deselect ─────────────────────────────────────────
+  const handleClick = (e: KonvaEventObject<MouseEvent>) => {
+    if (e.target === e.target.getStage()) selectSpace(null);
+  };
+
+  // ── Double-click: create stall (admin only) ─────────────────────────────────
+  const handleDblClick = (e: KonvaEventObject<MouseEvent>) => {
+    if (!isAdmin || e.target !== e.target.getStage()) return;
+    const stage = stageRef.current!;
+    const p = stage.getPointerPosition()!;
+    // Convert DOM → SVG coordinate space
+    const svgX = (p.x - stage.x()) / stage.scaleX();
+    const svgY = (p.y - stage.y()) / stage.scaleY();
+    addSpace(svgX, svgY);
+  };
+
+  // ── Drag end on group: position is already in SVG space ────────────────────
+  const handleDragEnd = (e: KonvaEventObject<DragEvent>, space: Space) => {
+    updateSpace(space.id, { x: e.target.x(), y: e.target.y() });
+    setCursor('grab');
+  };
+
+  // ── Transform end: normalise rect scale → store width/height ───────────────
+  const handleTransformEnd = (space: Space) => {
+    const rect = shapeRefs.current.get(space.id);
+    if (!rect) return;
+    const grp = rect.getParent() as Konva.Group;
+    const newX = grp.x() + rect.x();
+    const newY = grp.y() + rect.y();
+    const newW = Math.max(20, rect.width() * Math.abs(rect.scaleX()));
+    const newH = Math.max(12, rect.height() * Math.abs(rect.scaleY()));
+    const newR = rect.rotation() + grp.rotation();
+    rect.setAttrs({ x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0 });
+    grp.setAttrs({ x: newX, y: newY, rotation: 0 });
+    updateSpace(space.id, { x: newX, y: newY, width: newW, height: newH, rotation: newR });
+  };
+
+  return (
+    <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <Stage
+        ref={stageRef}
+        width={size.w}
+        height={size.h}
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={stopPan}
+        onMouseLeave={stopPan}
+        onClick={handleClick}
+        onDblClick={handleDblClick}
+      >
+        {/* ── Layer 1: static background ── */}
+        <Layer listening={false}>
+          {/* Cream fill covers the whole stage DOM canvas */}
+          <Rect x={-5000} y={-5000} width={10000} height={10000} fill="#f5f1ea" />
+
+          {/* SVG floor plan, clipped to hide the outer CAD border paths */}
+          {bgImage && (
+            <Group clipX={CLIP.x} clipY={CLIP.y} clipWidth={CLIP.w} clipHeight={CLIP.h}>
+              <KonvaImage
+                image={bgImage}
+                x={0} y={0}
+                width={SVG_W} height={SVG_H}
+                opacity={0.92}
+              />
+            </Group>
+          )}
+        </Layer>
+
+        {/* ── Layer 2: stalls + transformer (all in SVG coordinate space) ── */}
+        <Layer>
+          {spaces.map((space) => (
+            <StallNode
+              key={space.id}
+              space={space}
+              isAdmin={isAdmin}
+              isSelected={selectedSpace?.id === space.id}
+              shapeRef={(el) => {
+                if (el) shapeRefs.current.set(space.id, el);
+                else shapeRefs.current.delete(space.id);
+              }}
+              onSelect={selectSpace}
+              onGroupDragEnd={(e) => handleDragEnd(e, space)}
+              onTransformEnd={() => handleTransformEnd(space)}
+              setCursor={setCursor}
+            />
+          ))}
+
+          {isAdmin && (
+            <Transformer
+              ref={trRef}
+              rotateEnabled={true}
+              enabledAnchors={[
+                'top-left', 'top-right', 'bottom-left', 'bottom-right',
+                'middle-left', 'middle-right', 'top-center', 'bottom-center',
+              ]}
+              boundBoxFunc={(old, n) => (n.width < 20 || n.height < 12 ? old : n)}
+            />
+          )}
+        </Layer>
+      </Stage>
+
+      {/* ── Zoom toolbar ── */}
+      {(() => {
+        const pct = Math.round(
+          ((zoomLevel / 100 - MIN_SCALE) / (MAX_SCALE - MIN_SCALE)) * 100,
+        );
+        const clamp = (v: number) => Math.max(0, Math.min(100, v));
+
+        const zoomBy = (dir: 1 | -1) => {
+          const stage = stageRef.current;
+          if (!stage) return;
+          const old = stage.scaleX();
+          const cx = size.w / 2;
+          const cy = size.h / 2;
+          const origin = { x: (cx - stage.x()) / old, y: (cy - stage.y()) / old };
+          const next = Math.max(MIN_SCALE, Math.min(MAX_SCALE, old * Math.pow(ZOOM_STEP, dir)));
+          stage.scale({ x: next, y: next });
+          stage.position({ x: cx - origin.x * next, y: cy - origin.y * next });
+          setZoomLevel(Math.round(next * 100));
+        };
+
+        const resetZoom = () => {
+          const stage = stageRef.current;
+          if (!stage) return;
+          const s = Math.min(size.w / SVG_W, size.h / SVG_H) * 0.95;
+          stage.scale({ x: s, y: s });
+          stage.position({ x: (size.w - SVG_W * s) / 2, y: (size.h - SVG_H * s) / 2 });
+          stage.batchDraw();
+          setZoomLevel(Math.round(s * 100));
+        };
+
+        const btnStyle: React.CSSProperties = {
+          background: 'none', border: 'none', color: '#ffffffff',
+          fontSize: 16, cursor: 'pointer', padding: '0 6px',
+          opacity: 0.85, lineHeight: 1, display: 'flex', alignItems: 'center',
+        };
+
+        return (
+          <div style={{
+            position: 'absolute', bottom: 20, left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: 'rgba(20, 20, 20, 0.75)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: 999,
+            padding: '6px 14px',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+            zIndex: 5,
+            userSelect: 'none',
+            fontFamily: 'Inter, Arial, sans-serif',
+          }}>
+            {/* Zoom out */}
+            <button style={btnStyle} title="Alejar" onClick={() => zoomBy(-1)}>−</button>
+
+            {/* Progress bar + label */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{
+                width: 100, height: 4, borderRadius: 999,
+                background: 'rgba(255,255,255,0.2)', overflow: 'hidden',
+              }}>
+                <div style={{
+                  width: `${clamp(pct)}%`, height: '100%',
+                  background: '#fff', borderRadius: 999,
+                  transition: 'width 0.1s',
+                }} />
+              </div>
+              <span style={{ color: '#fff', fontSize: 11, fontWeight: 600, minWidth: 34, textAlign: 'right' }}>
+                {clamp(pct)}%
+              </span>
+            </div>
+
+            {/* Zoom in */}
+            <button style={btnStyle} title="Acercar" onClick={() => zoomBy(1)}>+</button>
+
+            {/* Divider */}
+            <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.2)' }} />
+
+            {/* Reset */}
+            <button style={{ ...btnStyle, fontSize: 14 }} title="Restablecer vista" onClick={resetZoom}>
+              ⊙
+            </button>
+          </div>
+        );
+      })()}
+
+      {/* ── Admin Layout Panel (bottom-right, admin only) ── */}
+      {isAdmin && (
+        <div style={{
+          position: 'absolute', bottom: 20, right: 20,
+          background: 'rgba(15, 15, 20, 0.82)',
+          backdropFilter: 'blur(12px)',
+          borderRadius: 16,
+          padding: '14px 16px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
+          display: 'flex', flexDirection: 'column', gap: 12,
+          zIndex: 10, minWidth: 200,
+          fontFamily: 'Inter, Arial, sans-serif',
+          color: '#fff',
+        }}>
+          {/* Header */}
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
+            textTransform: 'uppercase', opacity: 0.55, borderBottom: '1px solid rgba(255,255,255,0.1)',
+            paddingBottom: 8 }}>
+            ⚙️ &nbsp;Auto Layout
+          </div>
+
+          {/* Count selector */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <span style={{ fontSize: 12, opacity: 0.8 }}>Locales</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button
+                onClick={() => setStallCount((c) => Math.max(10, c - 1))}
+                style={{ width: 26, height: 26, borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.07)', color: '#fff', fontSize: 16,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >−</button>
+              <span style={{ fontSize: 18, fontWeight: 700, minWidth: 28, textAlign: 'center' }}>
+                {stallCount}
+              </span>
+              <button
+                onClick={() => setStallCount((c) => Math.min(27, c + 1))}
+                style={{ width: 26, height: 26, borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)',
+                  background: 'rgba(255,255,255,0.07)', color: '#fff', fontSize: 16,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >+</button>
+            </div>
+          </div>
+
+          {/* Range hint */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 10, opacity: 0.4 }}>mín 10</span>
+            <div style={{ flex: 1, height: 3, borderRadius: 999, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+              <div style={{ width: `${((stallCount - 10) / 17) * 100}%`, height: '100%',
+                background: 'rgba(255,255,255,0.5)', borderRadius: 999, transition: 'width 0.15s' }} />
+            </div>
+            <span style={{ fontSize: 10, opacity: 0.4 }}>máx 27</span>
+          </div>
+
+          {/* Auto Layout button */}
+          <button
+            onClick={() => generateLayout(stallCount)}
+            style={{ padding: '9px 0', borderRadius: 10, border: 'none',
+              background: 'linear-gradient(135deg, #4CAF50, #2E7D32)',
+              color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              letterSpacing: '0.02em', transition: 'opacity 0.15s' }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+          >
+            🗺️ &nbsp;Generar Layout
+          </button>
+
+          {/* Save button */}
+          <button
+            onClick={() => { saveLayout(); alert('Layout guardado ✓ (ver consola)'); }}
+            style={{ padding: '9px 0', borderRadius: 10, border: '1px solid rgba(255,255,255,0.15)',
+              background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 12,
+              fontWeight: 600, cursor: 'pointer', transition: 'opacity 0.15s' }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.75')}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+          >
+            💾 &nbsp;Guardar Layout
+          </button>
+
+          <p style={{ fontSize: 10, opacity: 0.35, textAlign: 'center', margin: 0 }}>
+            Arrastra los locales para ajustar
+          </p>
         </div>
-    );
+      )}
+
+    </div>
+  );
 };
 
 export default MarketMap;

@@ -1,20 +1,28 @@
 import React, { useState } from 'react';
 import { useMapStore } from '../../store/mapStore';
 
-const RequestModal: React.FC = () => {
+interface RequestModalProps { isAdmin: boolean; }
+
+const RequestModal: React.FC<RequestModalProps> = ({ isAdmin }) => {
     const selectedSpace = useMapStore((s) => s.selectedSpace);
-    const selectSpace = useMapStore((s) => s.selectSpace);
+    const selectSpace   = useMapStore((s) => s.selectSpace);
+    const updateSpace   = useMapStore((s) => s.updateSpace);
 
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [submitted, setSubmitted] = useState(false);
 
+    // Admins never request spaces — they manage them
+    if (isAdmin) return null;
     if (!selectedSpace || selectedSpace.status !== 'available') return null;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!name.trim() || !phone.trim()) return;
-        // Simulate submission
+
+        // Mark the space as 'pending' immediately so the map colour updates
+        updateSpace(selectedSpace.id, { status: 'pending' });
+
         setSubmitted(true);
         setTimeout(() => {
             setSubmitted(false);

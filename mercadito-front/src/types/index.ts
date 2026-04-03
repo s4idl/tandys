@@ -6,6 +6,8 @@ export interface Space {
     y: number;
     width: number;
     height: number;
+    rotation: number;
     status: SpaceStatus;
-    label?: string;
+    label?: string;   // short display label on the rect
+    name?: string;    // longer name shown in sidebar
 }
