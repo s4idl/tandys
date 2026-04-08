@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import MarketMap from './features/map/marketMap';
 import Navbar from './features/ui/Navbar';
-import type { UserType } from './features/ui/Navbar';
 import RequestModal from './features/ui/RequestModal';
-import RegisterBrandModal from './features/ui/RegisterBrandModal';
+import MisMarcas from './pages/miMarca/MisMarcas';
+import { useUserStore } from './store/userStore';
 import './App.css';
 
 // ─── Placeholder pages ────────────────────────────────────────────────────────
@@ -24,8 +24,9 @@ const Pagos = () => (
 
 // ─── Map root page ────────────────────────────────────────────────────────────
 const MapPage = () => {
-  const [userType, setUserType] = useState<UserType>('user');
-  const [showRegisterBrand, setShowRegisterBrand] = useState(false);
+  // Role pulled from global store — shared with all inner pages
+  const { userType, setUserType } = useUserStore();
+  const navigate = useNavigate();
 
   const isAdmin = userType === 'admin';
 
@@ -39,21 +40,28 @@ const MapPage = () => {
       {/* Floating tab bar + fixed logo */}
       <Navbar userType={userType} onUserTypeChange={setUserType} />
 
-      {/* Top-right Registrar Marca button */}
+      {/* Top-right Registrar Marca button — redirects to Mis Marcas with state */}
       <button
         className="btn-registrar-marca-fixed"
-        onClick={() => setShowRegisterBrand(true)}
+        onClick={() => navigate('/mi-marca', { state: { autoOpenWizard: true } })}
       >
         Registrar Marca
       </button>
 
       {/* Request modal — self-renders when an available space is selected */}
       <RequestModal isAdmin={isAdmin} />
+    </div>
+  );
+};
 
-      {/* Register brand modal */}
-      {showRegisterBrand && (
-        <RegisterBrandModal onClose={() => setShowRegisterBrand(false)} />
-      )}
+// ─── Inner page shell (Navbar flotante, rol global compartido) ────────────────
+const InnerShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Same global store — role stays consistent when navigating back to map
+  const { userType, setUserType } = useUserStore();
+  return (
+    <div style={{ position: 'relative', minHeight: '100vh', overflowY: 'auto', overflowX: 'hidden' }}>
+      {children}
+      <Navbar userType={userType} onUserTypeChange={setUserType} />
     </div>
   );
 };
@@ -64,8 +72,9 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<MapPage />} />
-        <Route path="/solicitudes" element={<Solicitudes />} />
-        <Route path="/pagos" element={<Pagos />} />
+        <Route path="/solicitudes" element={<InnerShell><Solicitudes /></InnerShell>} />
+        <Route path="/pagos" element={<InnerShell><Pagos /></InnerShell>} />
+        <Route path="/mi-marca" element={<InnerShell><MisMarcas /></InnerShell>} />
       </Routes>
     </BrowserRouter>
   );
