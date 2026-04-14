@@ -8,6 +8,7 @@ import { UsuariosModule } from './usuarios/usuarios.module';
 import { MarcasModule } from './marcas/marcas.module';
 import { PagosModule } from './pagos/pagos.module';
 import { SolicitudesModule } from './solicitudes/solicitudes.module';
+import { FaqModule } from './faq/faq.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { SolicitudesModule } from './solicitudes/solicitudes.module';
     MarcasModule,
     PagosModule,
     SolicitudesModule,
+    FaqModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}
