@@ -2,7 +2,9 @@ import {
     Injectable,
     NotFoundException,
     BadRequestException,
+    ForbiddenException,
 } from '@nestjs/common';
+import { Role } from '../auth/enums/role.enum';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
@@ -58,9 +60,20 @@ export class PagosService {
         });
     }
 
-    // Admin: ver todos los pagos
-    async findAll() {
+    // Admin: ver todos los pagos. Vendedor: ver solo los propios.
+    async findAll(user: any) {
+        const where: any = {};
+
+        if (user.rol === Role.VENDEDOR) {
+            where.solicitudes = {
+                marcas: {
+                    id_usuario: user.id,
+                },
+            };
+        }
+
         return this.prisma.pagos.findMany({
+            where,
             include: {
                 solicitudes: {
                     include: {
@@ -75,7 +88,7 @@ export class PagosService {
     }
 
     // Ver detalle de un pago específico
-    async findOne(id: number) {
+    async findOne(id: number, user: any) {
         const pago = await this.prisma.pagos.findUnique({
             where: { id_pago: id },
             include: {
@@ -92,6 +105,11 @@ export class PagosService {
 
         if (!pago) {
             throw new NotFoundException(`Pago con id ${id} no encontrado`);
+        }
+
+        // Si es vendedor, verificar que el pago le pertenezca
+        if (user.rol === Role.VENDEDOR && pago.solicitudes.marcas.id_usuario !== user.id) {
+            throw new ForbiddenException('No tienes permiso para ver este pago');
         }
 
         return pago;

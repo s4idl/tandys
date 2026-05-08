@@ -34,20 +34,23 @@ export class PagosController {
         return this.pagosService.create(dto);
     }
 
-    // GET /api/pagos — solo admin ve todos los pagos
+    // GET /api/pagos — admin ve todos, vendedor ve solo los suyos
     @UseGuards(RolesGuard)
-    @Roles(Role.ADMIN)
+    @Roles(Role.ADMIN, Role.VENDEDOR)
     @Get()
-    findAll() {
-        return this.pagosService.findAll();
+    findAll(@Req() req) {
+        return this.pagosService.findAll(req.user);
     }
 
     // GET /api/pagos/:id — detalle de un pago
     @UseGuards(RolesGuard)
     @Roles(Role.ADMIN, Role.VENDEDOR)
     @Get(':id')
-    findOne(@Param('id', ParseIntPipe) id: number) {
-        return this.pagosService.findOne(id);
+    findOne(
+        @Param('id', ParseIntPipe) id: number,
+        @Req() req,
+    ) {
+        return this.pagosService.findOne(id, req.user);
     }
 
     // PATCH /api/pagos/:id/verificar — admin verifica o rechaza el pago
