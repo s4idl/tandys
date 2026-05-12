@@ -3,7 +3,7 @@ import { RotateCcw, Settings } from 'lucide-react';
 import { Stage, Layer, Rect, Image as KonvaImage, Text, Group, Transformer } from 'react-konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type Konva from 'konva';
-import { useMapStore, STATUS_COLORS } from '../../store/mapStore';
+import { useMapStore } from '../../store/mapStore';
 import type { Space } from '../../types';
 import svgUrl from '../../assets/mapa-maestro.svg';
 
@@ -22,6 +22,34 @@ const MAX_SCALE = 8;
 
 interface MarketMapProps { isAdmin?: boolean; }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+/** Render a small star "★" using a rotated polygon approximation via Lines */
+const STAR_POINTS = (() => {
+  const pts: number[] = [];
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? 1 : 0.4;
+    const a = (Math.PI / 5) * i - Math.PI / 2;
+    pts.push(Math.cos(a) * r, Math.sin(a) * r);
+  }
+  return pts;
+})();
+
+// ── Visual config ─────────────────────────────────────────────────────────────
+const THEME = {
+  available: {
+    estandar: { fill: '#f8fafc', stroke: '#86efac', strokeWidth: 1.4 },
+    premium:  { fill: '#fffbeb', stroke: '#fcd34d', strokeWidth: 1.6 },
+  },
+  occupied: {
+    estandar: { fill: '#1e293b', stroke: '#334155', strokeWidth: 1 },
+    premium:  { fill: '#2d1a08', stroke: '#92400e', strokeWidth: 1.5 },
+  },
+  pending: {
+    estandar: { fill: '#fefce8', stroke: '#fde047', strokeWidth: 1.4 },
+    premium:  { fill: '#fef3c7', stroke: '#f59e0b', strokeWidth: 1.6 },
+  },
+};
+
 // ── StallNode ─────────────────────────────────────────────────────────────────
 interface StallNodeProps {
   space: Space;
@@ -37,7 +65,23 @@ interface StallNodeProps {
 const StallNode: React.FC<StallNodeProps> = ({
   space, isAdmin, isSelected, shapeRef, onSelect, onGroupDragEnd, onTransformEnd, setCursor,
 }) => {
-  const { fill, stroke, textColor } = STATUS_COLORS[space.status];
+  const { status, tipo = 'estandar', width: w, height: h, rotation, label, id } = space;
+  const isPremium = tipo === 'premium';
+
+  const theme = (THEME[status] ?? THEME.available)[tipo] ?? THEME.available.estandar;
+
+  // Selected highlight overrides stroke
+  const strokeColor = isSelected ? '#3b82f6' : theme.stroke;
+  const strokeW     = isSelected ? 2 : theme.strokeWidth;
+
+  // Font sizes scale with space size — floor at 5px, cap at 12px
+  const minDim    = Math.min(w, h);
+  const labelSize = Math.max(5, Math.min(10, minDim * 0.30));
+  const microSize = Math.max(4, Math.min(7,  minDim * 0.20));
+
+  // Occupied spaces show the brand name (stored as space.name after API connect)
+  const brandName = status === 'occupied' ? (space.name ?? label ?? id) : (label ?? id);
+
   return (
     <Group
       x={space.x} y={space.y}
@@ -49,33 +93,143 @@ const StallNode: React.FC<StallNodeProps> = ({
       onMouseEnter={() => setCursor(isAdmin ? 'grab' : 'pointer')}
       onMouseLeave={() => setCursor('default')}
     >
+      {/* ── Base rect: Transformer attaches here via shapeRef ── */}
       <Rect
         ref={shapeRef}
-        width={space.width} height={space.height}
-        rotation={space.rotation}
-        fill={fill}
-        stroke={isSelected ? '#1565C0' : stroke}
-        strokeWidth={isSelected ? 2 : 1}
-        cornerRadius={3}
+        width={w} height={h}
+        rotation={rotation}
+        fill={theme.fill}
+        stroke={strokeColor}
+        strokeWidth={strokeW}
+        cornerRadius={Math.min(4, minDim * 0.15)}
         onTransformEnd={onTransformEnd}
         shadowEnabled={isSelected}
-        shadowBlur={10}
-        shadowColor="rgba(21,101,192,0.4)"
+        shadowBlur={8}
+        shadowColor="rgba(59,130,246,0.45)"
       />
-      <Text
-        text={space.label ?? space.id}
-        rotation={space.rotation}
-        width={space.width} height={space.height}
-        align="center" verticalAlign="middle"
-        fontSize={Math.max(6, Math.min(space.width, space.height) * 0.28)}
-        fontStyle="bold"
-        fontFamily="Inter, Arial, sans-serif"
-        fill={textColor}
+
+      {/* ── All decorations in a clipped+rotated Group so nothing overflows ── */}
+      <Group
+        rotation={rotation}
+        clipFunc={(ctx: any) => { ctx.rect(0, 0, w, h); }}
         listening={false}
-      />
+      >
+        {/* Top accent stripe */}
+        <Rect
+          x={0} y={0}
+          width={w} height={Math.min(h * 0.22, 3.8)}
+          fill={
+            status === 'occupied'
+              ? (isPremium ? 'rgba(251,191,36,0.55)' : 'rgba(148,163,184,0.3)')
+              : status === 'pending'
+              ? 'rgba(250,204,21,0.6)'
+              : isPremium
+              ? 'rgba(251,191,36,0.5)'
+              : 'rgba(74,222,128,0.45)'
+          }
+        />
+
+        {/* Premium badge — safely inside clip bounds */}
+        {isPremium && (
+          <Rect
+            x={w - 9} y={1}
+            width={8} height={4}
+            fill="#d97706"
+            cornerRadius={1}
+            opacity={1}
+          />
+        )}
+
+        {/* Pending dashed ring */}
+        {status === 'pending' && (
+          <Rect
+            x={1} y={1}
+            width={w - 2} height={h - 2}
+            fill="transparent"
+            stroke="#ca8a04"
+            strokeWidth={1.5}
+            dash={[3, 2]}
+          />
+        )}
+
+        {/* Occupied texture */}
+        {status === 'occupied' && (
+          <Rect
+            x={0} y={0}
+            width={w} height={h}
+            fill="transparent"
+            stroke={isPremium ? 'rgba(217,119,6,0.2)' : 'rgba(148,163,184,0.12)'}
+            strokeWidth={6}
+            dash={[2, 5]}
+          />
+        )}
+
+        {/* Label / brand name */}
+        <Text
+          x={0} y={0}
+          text={brandName}
+          width={w} height={h}
+          align="center" verticalAlign="middle"
+          fontSize={labelSize}
+          fontStyle={status === 'occupied' ? 'bold' : '600'}
+          fontFamily="Inter, Arial, sans-serif"
+          fill={
+            status === 'occupied'
+              ? (isPremium ? '#fde68a' : '#e2e8f0')
+              : status === 'pending'
+              ? '#713f12'
+              : '#1e293b'
+          }
+          padding={2}
+          wrap="none"
+          ellipsis={true}
+        />
+      </Group>
     </Group>
   );
 };
+
+
+// ── Legend Content ────────────────────────────────────────────────────────────
+const LegendContent = () => (
+  <>
+    <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', marginBottom: 6, display: 'block' }}>Leyenda</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* Available estandar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 18, height: 12, borderRadius: 3, background: '#f8fafc', border: '1.5px solid #86efac', flexShrink: 0 }} />
+        <span style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Disponible estándar</span>
+      </div>
+
+      {/* Available premium */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ position: 'relative', width: 18, height: 12, borderRadius: 3, background: '#fffbeb', border: '1.5px solid #fcd34d', flexShrink: 0 }}>
+          <div style={{ position: 'absolute', top: 1, right: 1, width: 5, height: 4, background: '#f59e0b', borderRadius: 1 }} />
+        </div>
+        <span style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Disponible premium</span>
+      </div>
+
+      {/* Pending */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 18, height: 12, borderRadius: 3, background: '#fefce8', border: '1.5px dashed #fde047', flexShrink: 0 }} />
+        <span style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>En revisión</span>
+      </div>
+
+      {/* Occupied estandar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 18, height: 12, borderRadius: 3, background: '#1e293b', border: '1px solid #334155', flexShrink: 0 }} />
+        <span style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Ocupado estándar</span>
+      </div>
+
+      {/* Occupied premium */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 18, height: 12, borderRadius: 3, background: '#2d1a08', border: '1.5px solid #92400e', flexShrink: 0 }} />
+        <span style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>Ocupado premium</span>
+      </div>
+    </div>
+  </>
+);
+
 
 // ── MarketMap ─────────────────────────────────────────────────────────────────
 const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
@@ -309,6 +463,8 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
         </Layer>
       </Stage>
 
+
+
       {/* ── Zoom toolbar ── */}
       {(() => {
         const pct = Math.round(
@@ -525,6 +681,29 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
           <p style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', margin: 0 }}>
             Arrastra los locales para ajustar
           </p>
+
+          <div style={{ marginTop: 4, paddingTop: 16, borderTop: '1px solid #f3f4f6' }}>
+            <LegendContent />
+          </div>
+        </div>
+      )}
+
+      {/* ── Standalone Legend (bottom-right, non-admin only) ── */}
+      {!isAdmin && (
+        <div style={{
+          position: 'absolute', bottom: 20, right: 20,
+          background: 'rgba(255,255,255,0.92)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: '1px solid rgba(229,231,235,0.8)',
+          borderRadius: 20,
+          padding: '16px 18px',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.10), 0 1px 6px rgba(0,0,0,0.06)',
+          zIndex: 10,
+          fontFamily: 'Inter, Arial, sans-serif',
+          minWidth: 160,
+        }}>
+          <LegendContent />
         </div>
       )}
 

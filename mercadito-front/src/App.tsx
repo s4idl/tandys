@@ -3,24 +3,13 @@ import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import MarketMap from './features/map/marketMap';
 import Navbar from './features/ui/Navbar';
 import RequestModal from './features/ui/RequestModal';
+import Solicitudes from './pages/Solicitudes/Solicitudes';
 import MisMarcas from './pages/miMarca/MisMarcas';
+import Pagos from './pages/pagos/Pagos';
 import { useUserStore } from './store/userStore';
 import './App.css';
 
-// ─── Placeholder pages ────────────────────────────────────────────────────────
-const Solicitudes = () => (
-  <div className="inner-page">
-    <h2>📂 Solicitudes</h2>
-    <p>Próximamente: gestión de solicitudes de espacios.</p>
-  </div>
-);
 
-const Pagos = () => (
-  <div className="inner-page">
-    <h2>💳 Mis Pagos</h2>
-    <p>Próximamente: historial y gestión de pagos.</p>
-  </div>
-);
 
 // ─── Map root page ────────────────────────────────────────────────────────────
 const MapPage = () => {

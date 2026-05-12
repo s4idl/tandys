@@ -1,0 +1,462 @@
+/* ── Root & background ────────────────────────────────────────────────────── */
+.sol-root {
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(145deg, #f8f0f3 0%, #f0f2fa 50%, #f8f0f3 100%);
+  overflow-x: hidden;
+  padding-bottom: 120px; /* navbar space */
+}
+
+.sol-bg-blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.sol-bg-blob--1 {
+  width: 480px;
+  height: 480px;
+  top: -120px;
+  right: -80px;
+  background: radial-gradient(circle, rgba(123, 20, 48, 0.08) 0%, transparent 70%);
+}
+
+.sol-bg-blob--2 {
+  width: 360px;
+  height: 360px;
+  bottom: 80px;
+  left: -60px;
+  background: radial-gradient(circle, rgba(234, 88, 12, 0.05) 0%, transparent 70%);
+}
+
+/* ── Container ────────────────────────────────────────────────────────────── */
+.sol-container {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 48px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+.sol-header {
+  animation: solFadeDown 0.5s ease both;
+}
+
+.sol-header-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sol-header-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #7b1430, #c8748a);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(123, 20, 48, 0.28);
+}
+
+.sol-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.sol-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+/* ── Action cards container ───────────────────────────────────────────────── */
+.sol-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: solFadeDown 0.5s 0.08s ease both;
+}
+
+/* Liquid glass action card */
+.sol-action-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.70);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.sol-action-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.sol-action-card-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sol-action-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 20px;
+  background: rgba(123, 20, 48, 0.06);
+  flex-shrink: 0;
+}
+
+.sol-action-icon--search {
+  background: rgba(234, 179, 8, 0.1);
+}
+
+.sol-action-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sol-action-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  text-align: left;
+}
+
+.sol-action-desc {
+  font-size: 13px;
+  color: #6b7280;
+  text-align: left;
+}
+
+.sol-action-arrow {
+  color: #9ca3af;
+  margin-left: 12px;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.sol-action-card:hover .sol-action-arrow {
+  transform: translateX(3px);
+  color: #4b5563;
+}
+
+/* ── Section Dividers & Labels ────────────────────────────────────────────── */
+.sol-section-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.sol-divider {
+  height: 1px;
+  border: none;
+  background: linear-gradient(90deg, rgba(229, 231, 235, 1) 0%, rgba(229, 231, 235, 0) 100%);
+  margin-bottom: 20px;
+}
+
+/* ── Active Request Detail Card ──────────────────────────────────────────── */
+.sol-request-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.70);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: solCardIn 0.5s ease both;
+}
+
+/* Header line (Space A4 + Badge) */
+.sol-request-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sol-request-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.sol-badge {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #ffedd5;
+}
+
+/* Data list lines */
+.sol-request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sol-request-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 16px;
+}
+
+.sol-request-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sol-request-label {
+  font-size: 13px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.sol-request-value {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 700;
+}
+
+.sol-request-value--price {
+  color: #b45309; /* Matches "$350 MXN" style in the mockup approximately */
+}
+
+/* ── Call to action footer in card ────────────────────────────────────────── */
+.sol-payment-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(234, 88, 12, 0.3);
+  background: rgba(255, 247, 237, 0.5); /* Very light orange tint */
+  color: #b45309;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sol-payment-btn:hover {
+  background: rgba(255, 237, 213, 0.7);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.1);
+}
+
+.sol-payment-btn:active {
+  transform: scale(0.98);
+}
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+@keyframes solFadeDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes solCardIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .sol-container {
+    padding: 32px 16px 24px;
+  }
+}
+
+/* ── Modal Overlay & Card ─────────────────────────────────────────────────── */
+.sol-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(17, 24, 39, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 16px;
+  animation: solFadeIn 0.3s ease both;
+}
+
+.sol-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  background: #fdfbf9;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  animation: solCardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.sol-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.sol-modal-header {
+  margin-bottom: 24px;
+}
+
+.sol-modal-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.sol-modal-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.sol-status-container {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.sol-status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.sol-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  margin-bottom: 32px;
+}
+
+.sol-timeline::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 24px;
+  bottom: 24px;
+  width: 2px;
+  background: #e5e7eb;
+  z-index: 0;
+}
+
+.sol-timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.sol-timeline-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+
+.sol-timeline-item.completed .sol-timeline-icon {
+  background: #10b981;
+  color: white;
+}
+
+.sol-timeline-item.warning .sol-timeline-icon {
+  background: #eab308;
+  color: white;
+}
+
+.sol-timeline-content {
+  display: flex;
+  flex-direction: column;
+  padding-top: 4px;
+}
+
+.sol-timeline-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.sol-timeline-desc {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.sol-buy-btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  background: #c37b58; /* Color similar to mockup */
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.sol-buy-btn:hover {
+  opacity: 0.9;
+}
+
+@keyframes solFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

@@ -1,5 +1,9 @@
 import { create } from 'zustand';
-import type { Space, SpaceStatus } from '../types';
+import type { Space, SpaceStatus, SpaceTipo } from '../types';
+import { PRECIO_POR_TIPO } from '../types';
+
+// 30% of spaces are premium — determined by index so it's consistent
+const tipoFromIndex = (i: number): SpaceTipo => (i % 3 === 0 ? 'premium' : 'estandar');
 
 let _id = 1;
 const uid = () => `local-${_id++}`;
@@ -77,11 +81,16 @@ const POOLS: P[][] = [
 
 // Build initial layout: all 27 presets from V0
 function buildLayout(): Space[] {
-  return POOLS[0].slice(0, 27).map((p, i) => ({
-    ...p,
-    id: `L${i + 1}`, label: `L${i + 1}`, name: `Local ${i + 1}`,
-    status: (['available','available','available','occupied','pending'] as SpaceStatus[])[i % 5],
-  }));
+  return POOLS[0].slice(0, 27).map((p, i) => {
+    const tipo = tipoFromIndex(i);
+    return {
+      ...p,
+      id: `L${i + 1}`, label: `L${i + 1}`, name: `Local ${i + 1}`,
+      tipo,
+      precio: PRECIO_POR_TIPO[tipo],
+      status: (['available','available','available','occupied','pending'] as SpaceStatus[])[i % 5],
+    };
+  });
 }
 
 // ── Store ────────────────────────────────────────────────────────────────────
@@ -130,18 +139,20 @@ export const useMapStore = create<MapStore>((set, get) => ({
   generateLayout: (count) => {
     const n = Math.max(10, Math.min(27, count));
     const last = get().lastVariant;
-    // Pick a different variant at random
     const options = [0,1,2,3].filter(v => v !== last);
     const variant = options[Math.floor(Math.random() * options.length)];
-    // Shuffle within each corridor section (~last quarter) for variety
     const pool = [...POOLS[variant]];
-    // Light shuffle within corridors (swap pairs)
     for (let i = 0; i < pool.length - 1; i += 2) {
       if (Math.random() > 0.5) [pool[i], pool[i+1]] = [pool[i+1], pool[i]];
     }
-    const spaces: Space[] = pool.slice(0, n).map((p, i) => ({
-      ...p, id: `G${i+1}`, label: `G${i+1}`, name: `Local ${i+1}`, status: 'available' as SpaceStatus,
-    }));
+    const spaces: Space[] = pool.slice(0, n).map((p, i) => {
+      const tipo = tipoFromIndex(i);
+      return {
+        ...p, id: `G${i+1}`, label: `G${i+1}`, name: `Local ${i+1}`,
+        tipo, precio: PRECIO_POR_TIPO[tipo],
+        status: 'available' as SpaceStatus,
+      };
+    });
     set({ spaces, selectedSpace: null, lastVariant: variant });
   },
 
@@ -149,7 +160,6 @@ export const useMapStore = create<MapStore>((set, get) => ({
     console.log('[saveLayout]', JSON.stringify(get().spaces, null, 2)),
 }));
 
-// ── Shared colour tokens ─────────────────────────────────────────────────────
 export const STATUS_COLORS: Record<SpaceStatus, { fill: string; stroke: string; textColor: string }> = {
   available: { fill: '#4CAF50', stroke: '#2E7D32', textColor: '#fff' },
   occupied:  { fill: '#F44336', stroke: '#B71C1C', textColor: '#fff' },
