@@ -26,6 +26,7 @@ async register(data: any) {
       nombre: data.nombre,
       correo: data.correo,
       contrasena: hashedPassword,
+      telefono: data.telefono,
       rol: data.rol ?? 'visualizador',
     },
   });
