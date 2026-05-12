@@ -1,0 +1,754 @@
+/* ── Root & background ────────────────────────────────────────────────────── */
+.prf-root {
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(145deg, #f8f0f3 0%, #f0f2fa 50%, #f8f0f3 100%);
+  overflow-x: hidden;
+  padding-bottom: 120px;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+/* ── Ambient blobs ────────────────────────────────────────────────────────── */
+.prf-blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.prf-blob--1 {
+  width: 480px;
+  height: 480px;
+  top: -120px;
+  right: -80px;
+  background: radial-gradient(circle, rgba(123, 20, 48, 0.08) 0%, transparent 70%);
+}
+
+.prf-blob--2 {
+  width: 360px;
+  height: 360px;
+  bottom: 80px;
+  left: -60px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.07) 0%, transparent 70%);
+}
+
+/* ── Container ────────────────────────────────────────────────────────────── */
+.prf-content {
+  position: relative;
+  z-index: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 48px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ── Hero card ────────────────────────────────────────────────────────────── */
+.prf-hero {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.70);
+  border-radius: 24px;
+  padding: 28px 32px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  animation: prfFadeDown 0.45s ease both;
+}
+
+/* ── Avatar ───────────────────────────────────────────────────────────────── */
+.prf-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.prf-avatar {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7b1430, #c8748a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  box-shadow: 0 8px 24px rgba(123, 20, 48, 0.28);
+}
+
+/* ── Hero info ────────────────────────────────────────────────────────────── */
+.prf-hero-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.prf-hero-name {
+  font-size: 26px;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prf-hero-email {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 12px;
+}
+
+.prf-hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ── Badges ───────────────────────────────────────────────────────────────── */
+.prf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+
+.prf-badge--rol {
+  background: rgba(123, 20, 48, 0.08);
+  color: #7b1430;
+  border-color: rgba(123, 20, 48, 0.2);
+}
+
+.prf-badge--activo {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+
+.prf-badge--fecha {
+  background: rgba(99, 102, 241, 0.07);
+  color: #4f46e5;
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.prf-badge--phone {
+  background: rgba(245, 158, 11, 0.08);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+/* ── Hero stats ───────────────────────────────────────────────────────────── */
+.prf-hero-stats {
+  display: flex;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.prf-stat {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.80);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 14px;
+  padding: 14px 22px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+}
+
+.prf-stat-val {
+  font-size: 28px;
+  font-weight: 900;
+  color: #7b1430;
+  line-height: 1;
+}
+
+.prf-stat-lbl {
+  font-size: 10px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* ── Section header ───────────────────────────────────────────────────────── */
+.prf-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.prf-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.prf-section-hr {
+  flex: 1;
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, #e5e7eb, transparent);
+}
+
+.prf-add-marca-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(123, 20, 48, 0.06);
+  color: #7b1430;
+  border: 1px solid rgba(123, 20, 48, 0.15);
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.prf-add-marca-btn:hover {
+  background: rgba(123, 20, 48, 0.12);
+  transform: translateY(-1px);
+}
+
+/* ── Split layout ─────────────────────────────────────────────────────────── */
+.prf-split {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+  align-items: start;
+  animation: prfFadeDown 0.5s 0.1s ease both;
+}
+
+@media (max-width: 720px) {
+  .prf-split {
+    grid-template-columns: 1fr;
+  }
+  .prf-hero {
+    flex-direction: column;
+    text-align: center;
+  }
+  .prf-hero-stats {
+    justify-content: center;
+  }
+  .prf-hero-badges {
+    justify-content: center;
+  }
+}
+
+/* ── Marcas list panel ────────────────────────────────────────────────────── */
+.prf-marcas-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.70);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+}
+
+.prf-marcas-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 500px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(123, 20, 48, 0.25) transparent;
+}
+
+.prf-marcas-list::-webkit-scrollbar { width: 4px; }
+.prf-marcas-list::-webkit-scrollbar-track { background: transparent; }
+.prf-marcas-list::-webkit-scrollbar-thumb {
+  background: rgba(123, 20, 48, 0.25);
+  border-radius: 9999px;
+}
+
+/* ── Marca row item ───────────────────────────────────────────────────────── */
+.prf-marca-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease;
+  position: relative;
+}
+
+.prf-marca-item:hover {
+  background: rgba(123, 20, 48, 0.04);
+  transform: translateX(2px);
+}
+
+.prf-marca-item--active {
+  background: rgba(123, 20, 48, 0.07);
+  border-color: rgba(123, 20, 48, 0.2);
+}
+
+.prf-marca-item--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 3px;
+  background: linear-gradient(180deg, #c8748a, #7b1430);
+  border-radius: 0 3px 3px 0;
+}
+
+.prf-marca-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.prf-marca-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.prf-marca-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.prf-marca-item-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prf-marca-item-meta {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+.prf-marca-item-chevron {
+  color: #d1d5db;
+  transition: transform 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.prf-marca-item--active .prf-marca-item-chevron {
+  color: #7b1430;
+  transform: translateX(2px);
+}
+
+.prf-marca-sol-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: rgba(123, 20, 48, 0.10);
+  color: #7b1430;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Empty marcas */
+.prf-marcas-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 20px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.prf-marcas-empty-icon { font-size: 40px; }
+.prf-marcas-empty p { font-size: 13px; color: #6b7280; }
+
+/* ── Detail panel ─────────────────────────────────────────────────────────── */
+.prf-detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.prf-detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 340px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1.5px dashed #e5e7eb;
+  border-radius: 20px;
+  color: #9ca3af;
+}
+
+.prf-detail-empty-icon { font-size: 44px; }
+.prf-detail-empty p { font-size: 13px; color: #9ca3af; }
+
+/* ── Brand detail card ────────────────────────────────────────────────────── */
+.prf-brand-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.70);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+  animation: prfDetailIn 0.22s ease both;
+}
+
+@keyframes prfDetailIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.prf-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.prf-brand-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.prf-brand-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.prf-brand-title { flex: 1; min-width: 0; }
+
+.prf-brand-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+
+.prf-brand-desc {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Social tags */
+.prf-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 16px;
+}
+
+.prf-social {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid;
+}
+
+.prf-social--ig {
+  background: rgba(219, 39, 119, 0.07);
+  color: #db2777;
+  border-color: rgba(219, 39, 119, 0.18);
+}
+
+.prf-social--fb {
+  background: rgba(24, 119, 242, 0.07);
+  color: #1877F2;
+  border-color: rgba(24, 119, 242, 0.18);
+}
+
+.prf-social--tiktok {
+  background: rgba(17, 24, 39, 0.06);
+  color: #111827;
+  border-color: rgba(17, 24, 39, 0.12);
+}
+
+/* ── Solicitudes section ──────────────────────────────────────────────────── */
+.prf-sol-section {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.70);
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+}
+
+.prf-sol-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* ── Solicitud card ───────────────────────────────────────────────────────── */
+.prf-sol-card {
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.prf-sol-card:hover {
+  border-color: #e5e7eb;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.prf-sol-status-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.prf-sol-status-icon--pendiente { background: #fefce8; color: #ca8a04; }
+.prf-sol-status-icon--aceptada  { background: #dcfce7; color: #16a34a; }
+.prf-sol-status-icon--rechazada { background: #fef2f2; color: #dc2626; }
+
+.prf-sol-info { flex: 1; min-width: 0; }
+
+.prf-sol-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.prf-sol-espacio {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.prf-sol-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid;
+}
+
+.prf-sol-chip--pendiente {
+  background: #fefce8;
+  color: #a16207;
+  border-color: #fde68a;
+}
+
+.prf-sol-chip--aceptada {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+
+.prf-sol-chip--rechazada {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.prf-sol-mercadito {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.prf-sol-precio {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4f46e5;
+}
+
+.prf-sol-fecha {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.prf-sol-comentario {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 11px;
+  color: #b91c1c;
+  line-height: 1.5;
+}
+
+/* Sol empty */
+.prf-sol-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 20px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.prf-sol-empty-icon { font-size: 32px; }
+.prf-sol-empty p { font-size: 12px; color: #9ca3af; }
+
+/* ── Loading skeleton ─────────────────────────────────────────────────────── */
+.prf-skeleton {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: prfShimmer 1.5s infinite;
+}
+
+@keyframes prfShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.prf-skeleton-hero {
+  height: 136px;
+  border-radius: 24px;
+}
+
+.prf-skeleton-split {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+}
+
+.prf-skeleton-left  { height: 320px; border-radius: 20px; }
+.prf-skeleton-right { height: 320px; border-radius: 20px; }
+
+/* ── Error state ──────────────────────────────────────────────────────────── */
+.prf-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  border-radius: 24px;
+  color: #ef4444;
+}
+
+.prf-error p { font-size: 14px; color: #6b7280; max-width: 300px; line-height: 1.5; }
+
+.prf-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 9999px;
+  background: #fff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.prf-retry-btn:hover {
+  border-color: #7b1430;
+  color: #7b1430;
+  background: rgba(123, 20, 48, 0.04);
+}
+
+/* ── Mock banner ──────────────────────────────────────────────────────────── */
+.prf-mock-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(245, 158, 11, 0.10);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b45309;
+  animation: prfFadeDown 0.35s ease both;
+}
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+@keyframes prfFadeDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
