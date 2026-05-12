@@ -1,0 +1,539 @@
+/* ── Overlay ──────────────────────────────────────────────────────────────── */
+.rpm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(17, 24, 39, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 16px;
+  animation: rpmFadeIn 0.3s ease both;
+}
+
+/* ── Modal Container ──────────────────────────────────────────────────────── */
+.rpm-modal {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 28px;
+  padding: 32px;
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  animation: rpmSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  display: flex;
+  flex-direction: column;
+}
+
+.rpm-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.5);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.rpm-close:hover {
+  background: rgba(255, 255, 255, 0.9);
+  color: #111827;
+  transform: scale(1.05);
+}
+
+/* ── Wizard Steps Container ───────────────────────────────────────────────── */
+.rpm-content {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Header */
+.rpm-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.rpm-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #7b1430, #c8748a);
+  color: white;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 20px rgba(123, 20, 48, 0.25);
+}
+
+.rpm-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.rpm-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* ── Step 1: Space Details ────────────────────────────────────────────────── */
+.rpm-space-details {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(229, 231, 235, 0.6);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rpm-space-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.6);
+  padding-bottom: 12px;
+}
+
+.rpm-space-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.rpm-badge {
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rpm-badge--available {
+  background: #dcfce7;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.rpm-badge--premium {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.rpm-space-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.rpm-space-label {
+  color: #6b7280;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rpm-space-value {
+  color: #111827;
+  font-weight: 700;
+}
+
+.rpm-space-value--cost {
+  color: #7b1430;
+}
+
+/* ── Step 2: Brand Selection ──────────────────────────────────────────────── */
+.rpm-brands-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Custom scrollbar for brand list */
+.rpm-brands-list::-webkit-scrollbar {
+  width: 6px;
+}
+.rpm-brands-list::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.02);
+  border-radius: 4px;
+}
+.rpm-brands-list::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+}
+
+.rpm-brand-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.rpm-brand-item:hover {
+  background: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+
+.rpm-brand-item--selected {
+  background: rgba(123, 20, 48, 0.04);
+  border-color: #7b1430;
+  box-shadow: 0 4px 16px rgba(123, 20, 48, 0.08);
+}
+
+.rpm-brand-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: white;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.rpm-brand-info {
+  flex: 1;
+}
+
+.rpm-brand-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  display: block;
+}
+
+.rpm-brand-desc {
+  font-size: 12px;
+  color: #6b7280;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.rpm-brand-radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.rpm-brand-item--selected .rpm-brand-radio {
+  border-color: #7b1430;
+  background: #7b1430;
+}
+
+.rpm-brand-radio-inner {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.2s;
+}
+
+.rpm-brand-item--selected .rpm-brand-radio-inner {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ── Step 3: Payment Integration ──────────────────────────────────────────── */
+.rpm-bank-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+}
+
+.rpm-bank-header {
+  font-size: 15px;
+  font-weight: 800;
+  color: #111827;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 12px;
+}
+
+.rpm-bank-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.rpm-bank-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.rpm-bank-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.rpm-bank-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #374151;
+  font-family: inherit;
+}
+
+.rpm-bank-amount {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed #e5e7eb;
+  color: #7b1430;
+}
+
+.rpm-bank-amount span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rpm-bank-amount strong {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.rpm-copy-btn {
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rpm-copy-btn:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+/* Upload Zone */
+.rpm-upload-zone {
+  position: relative;
+  margin-top: 12px;
+}
+
+.rpm-file-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+
+.rpm-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  border: 2px dashed #d1d5db;
+  border-radius: 16px;
+  background: rgba(249, 250, 251, 0.5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  cursor: pointer;
+}
+
+.rpm-upload-label:hover {
+  border-color: #7b1430;
+  background: rgba(123, 20, 48, 0.02);
+}
+
+.rpm-upload-label--active {
+  border-color: #10b981;
+  border-style: solid;
+  background: #f0fdf4;
+}
+
+.rpm-upload-icon {
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
+
+.rpm-upload-icon-success {
+  color: #10b981;
+  margin-bottom: 8px;
+}
+
+.rpm-upload-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rpm-upload-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.rpm-upload-desc {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* ── Footer Actions ───────────────────────────────────────────────────────── */
+.rpm-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.rpm-btn {
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.rpm-btn--secondary {
+  background: rgba(243, 244, 246, 0.8);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+  color: #374151;
+}
+
+.rpm-btn--secondary:hover {
+  background: #e5e7eb;
+}
+
+.rpm-btn--primary {
+  background: linear-gradient(135deg, #7b1430, #c8748a);
+  border: none;
+  color: white;
+  box-shadow: 0 8px 24px rgba(123, 20, 48, 0.25);
+}
+
+.rpm-btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(123, 20, 48, 0.35);
+}
+
+.rpm-btn--primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Success State ────────────────────────────────────────────────────────── */
+.rpm-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 0;
+  animation: rpmFadeIn 0.4s ease both;
+}
+
+.rpm-success-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+/* ── Loading State ────────────────────────────────────────────────────────── */
+.rpm-loader {
+  display: flex;
+  justify-content: center;
+  padding: 30px 0;
+}
+
+.rpm-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(123, 20, 48, 0.2);
+  border-top-color: #7b1430;
+  border-radius: 50%;
+  animation: rpmSpin 0.8s linear infinite;
+}
+
+/* ── Keyframes ────────────────────────────────────────────────────────────── */
+@keyframes rpmFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes rpmSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes rpmSpin {
+  to { transform: rotate(360deg); }
+}
