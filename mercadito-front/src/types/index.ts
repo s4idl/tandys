@@ -20,3 +20,31 @@ export interface Space {
     label?: string;      // short display label on the rect
     name?: string;       // longer name shown in sidebar
 }
+
+export interface Marca {
+  id_marca: number;
+  nombre_marca: string;
+  descripcion: string | null;
+  logo_url: string | null;
+  instagram: string | null;
+  facebook: string | null;
+  tiktok: string | null;
+  fecha_creacion: string | null;
+}
+
+export interface Solicitud {
+  id_solicitud: number;
+  id_marca: number;
+  id_espacio: number;
+  estado: string; // 'pendiente' | 'aceptada' | 'rechazada'
+  fecha_solicitud: string;
+}
+
+export interface Pago {
+  id_pago: number;
+  id_solicitud: number;
+  monto: string | number;
+  estado: string; // 'pendiente' | 'verificado' | 'rechazado'
+  metodo_pago: string;
+  fecha_pago: string;
+}
