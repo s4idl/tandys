@@ -15,7 +15,6 @@ import {
   RefreshCw,
   DollarSign,
   Tag,
-  FlaskConical,
   Plus,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';

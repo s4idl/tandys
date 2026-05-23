@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { RotateCcw, Settings } from 'lucide-react';
+import { RotateCcw, Settings, ChevronUp, Trash2 } from 'lucide-react';
 import { Stage, Layer, Rect, Image as KonvaImage, Text, Group, Transformer } from 'react-konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type Konva from 'konva';
@@ -21,18 +21,6 @@ const MIN_SCALE = 1.55;
 const MAX_SCALE = 8;
 
 interface MarketMapProps { isAdmin?: boolean; }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-/** Render a small star "★" using a rotated polygon approximation via Lines */
-const STAR_POINTS = (() => {
-  const pts: number[] = [];
-  for (let i = 0; i < 10; i++) {
-    const r = i % 2 === 0 ? 1 : 0.4;
-    const a = (Math.PI / 5) * i - Math.PI / 2;
-    pts.push(Math.cos(a) * r, Math.sin(a) * r);
-  }
-  return pts;
-})();
 
 // ── Visual config ─────────────────────────────────────────────────────────────
 const THEME = {
@@ -77,7 +65,6 @@ const StallNode: React.FC<StallNodeProps> = ({
   // Font sizes scale with space size — floor at 5px, cap at 12px
   const minDim    = Math.min(w, h);
   const labelSize = Math.max(5, Math.min(10, minDim * 0.30));
-  const microSize = Math.max(4, Math.min(7,  minDim * 0.20));
 
   // Occupied spaces show the brand name (stored as space.name after API connect)
   const brandName = status === 'occupied' ? (space.name ?? label ?? id) : (label ?? id);
@@ -191,9 +178,9 @@ const StallNode: React.FC<StallNodeProps> = ({
 
 
 // ── Legend Content ────────────────────────────────────────────────────────────
-const LegendContent = () => (
+const LegendContent: React.FC<{ hideTitle?: boolean }> = ({ hideTitle }) => (
   <>
-    <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', marginBottom: 6, display: 'block' }}>Leyenda</span>
+    {!hideTitle && <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280', marginBottom: 6, display: 'block' }}>Leyenda</span>}
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {/* Available estandar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -237,11 +224,13 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
   const selectedSpace = useMapStore((s) => s.selectedSpace);
   const addSpace = useMapStore((s) => s.addSpace);
   const updateSpace = useMapStore((s) => s.updateSpace);
+  const deleteSpace = useMapStore((s) => s.deleteSpace);
   const selectSpace = useMapStore((s) => s.selectSpace);
   const generateLayout = useMapStore((s) => s.generateLayout);
   const saveLayout = useMapStore((s) => s.saveLayout);
 
   const [stallCount, setStallCount] = useState(27);
+  const [isLegendOpen, setIsLegendOpen] = useState(false);
 
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
@@ -259,6 +248,19 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
     if (hideTimer.current) clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => setZoomVisible(false), 2500);
   };
+
+  // ── Keyboard support for deletion ───────────────────────────────────────────
+  useEffect(() => {
+    if (!isAdmin) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if ((e.key === 'Backspace' || e.key === 'Delete') && selectedSpace) {
+        deleteSpace(selectedSpace.id);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAdmin, selectedSpace, deleteSpace]);
 
   // ── Container size ──────────────────────────────────────────────────────────
   const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
@@ -678,12 +680,43 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
             💾 &nbsp;Guardar Layout
           </button>
 
+          {/* Eliminar Local Seleccionado button */}
+          {selectedSpace && (
+            <button
+              onClick={() => deleteSpace(selectedSpace.id)}
+              style={{
+                padding: '9px 0', borderRadius: 12,
+                border: '1px solid #fee2e2',
+                background: '#fef2f2', color: '#ef4444', fontSize: 12,
+                fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#fee2e2')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '#fef2f2')}
+            >
+              <Trash2 size={14} /> Eliminar Local
+            </button>
+          )}
+
           <p style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', margin: 0 }}>
-            Arrastra los locales para ajustar
+            Arrastra los locales para ajustar, {selectedSpace ? 'suprimir para borrar' : 'doble clic para añadir'}
           </p>
 
           <div style={{ marginTop: 4, paddingTop: 16, borderTop: '1px solid #f3f4f6' }}>
-            <LegendContent />
+            <div 
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+              onClick={() => setIsLegendOpen(!isLegendOpen)}
+            >
+              <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6b7280' }}>
+                Leyenda
+              </span>
+              <ChevronUp size={14} style={{ transform: isLegendOpen ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.2s', color: '#9ca3af' }} />
+            </div>
+            {isLegendOpen && (
+              <div style={{ marginTop: 12 }}>
+                <LegendContent hideTitle />
+              </div>
+            )}
           </div>
         </div>
       )}

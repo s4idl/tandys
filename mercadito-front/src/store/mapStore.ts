@@ -10,7 +10,7 @@ const uid = () => `local-${_id++}`;
 
 // ── Helper: place a stall centred at (cx,cy) with correct rotation offset ────
 // Because Konva rotates Rect around its own top-left, we must adjust x/y.
-type P = Omit<Space, 'id' | 'label' | 'name' | 'status'>;
+type P = Omit<Space, 'id' | 'label' | 'name' | 'status' | 'tipo' | 'precio'>;
 function at(cx: number, cy: number, sw: number, sh: number, rotDeg: number): P {
   const θ = (rotDeg * Math.PI) / 180;
   return {
@@ -117,6 +117,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
     const sp: Space = {
       id: uid(), label: `N${_id-1}`, name: `Nuevo ${_id-1}`,
       x: x-30, y: y-20, width: 60, height: 40, rotation: 0, status: 'available',
+      tipo: 'estandar', precio: 350,
     };
     set((s) => ({ spaces: [...s.spaces, sp], selectedSpace: sp }));
   },
