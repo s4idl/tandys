@@ -2,6 +2,8 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSolicitudDto } from './dto/create-solicitud.dto';
@@ -13,12 +15,56 @@ export class SolicitudesService {
 
   // POST /api/solicitudes — vendedor crea solicitud de espacio
   async crear(dto: CreateSolicitudDto) {
-    return this.prisma.solicitudes.create({
-      data: {
-        id_marca: dto.id_marca,
-        id_espacio: dto.id_espacio,
-        estado: 'pendiente',
-      },
+    return this.prisma.$transaction(async (tx) => {
+
+      // 1. Verificar que el espacio exista y esté disponible
+      const espacio = await tx.espacios.findUnique({
+        where: { id_espacio: dto.id_espacio },
+      });
+
+      if (!espacio) {
+        throw new NotFoundException(
+          `Espacio con id ${dto.id_espacio} no encontrado`,
+        );
+      }
+
+      if (espacio.estado !== 'disponible') {
+        throw new BadRequestException(
+          `El espacio ${espacio.numero_espacio} ya no está disponible (estado: ${espacio.estado})`,
+        );
+      }
+
+      // 2. Verificar que la misma marca no tenga ya una solicitud activa para este espacio
+      const solicitudExistente = await tx.solicitudes.findFirst({
+        where: {
+          id_marca:   dto.id_marca,
+          id_espacio: dto.id_espacio,
+          estado:     { in: ['pendiente', 'aceptada'] },
+        },
+      });
+
+      if (solicitudExistente) {
+        throw new ConflictException(
+          `Ya existe una solicitud activa de esta marca para el espacio ${espacio.numero_espacio}`,
+        );
+      }
+
+      // 3. Crear la solicitud y marcar el espacio como solicitado (atómicamente)
+      const [solicitud] = await Promise.all([
+        tx.solicitudes.create({
+          data: {
+            id_marca:   dto.id_marca,
+            id_espacio: dto.id_espacio,
+            estado:     'pendiente',
+          },
+        }),
+        tx.espacios.update({
+          where: { id_espacio: dto.id_espacio },
+          data:  { estado: 'solicitado' },
+        }),
+      ]);
+
+      return solicitud;
     });
   }
 
@@ -26,7 +72,7 @@ export class SolicitudesService {
   async findAll() {
     return this.prisma.solicitudes.findMany({
       include: {
-        marcas: { select: { id_marca: true, nombre_marca: true } },
+        marcas: true, // Se trae todos los campos (descripcion, redes, etc) para el modal
         espacios: { select: { id_espacio: true, numero_espacio: true, precio: true } },
       },
       orderBy: { fecha_solicitud: 'desc' },
@@ -40,7 +86,7 @@ export class SolicitudesService {
         marcas: { id_usuario: idUsuario },
       },
       include: {
-        marcas: { select: { id_marca: true, nombre_marca: true } },
+        marcas: true,
         espacios: { select: { id_espacio: true, numero_espacio: true, precio: true } },
       },
       orderBy: { fecha_solicitud: 'desc' },
@@ -78,14 +124,24 @@ export class SolicitudesService {
 
   // PATCH /api/solicitudes/:id/rechazar — admin rechaza la solicitud
   async rechazar(id: number, idAdmin: number, dto: ResponderSolicitudDto) {
-    await this.findOne(id);
-    return this.prisma.solicitudes.update({
-      where: { id_solicitud: id },
-      data: {
-        estado: 'rechazada',
-        id_admin_gestion: idAdmin,
-        comentario_admin: dto.comentario_admin ?? null,
-      },
+    const solicitud = await this.findOne(id);
+    return this.prisma.$transaction(async (tx) => {
+      const [updated] = await Promise.all([
+        tx.solicitudes.update({
+          where: { id_solicitud: id },
+          data: {
+            estado:           'rechazada',
+            id_admin_gestion: idAdmin,
+            comentario_admin: dto.comentario_admin ?? null,
+          },
+        }),
+        // Liberar el espacio para que pueda volver a solicitarse
+        tx.espacios.update({
+          where: { id_espacio: solicitud.id_espacio },
+          data:  { estado: 'disponible' },
+        }),
+      ]);
+      return updated;
     });
   }
 }

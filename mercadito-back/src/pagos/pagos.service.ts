@@ -77,8 +77,8 @@ export class PagosService {
             include: {
                 solicitudes: {
                     include: {
-                        marcas: { select: { nombre_marca: true } },
-                        espacios: { select: { numero_espacio: true } },
+                        marcas: true, // Necesario para el modal de detalles de marca
+                        espacios: { select: { numero_espacio: true, precio: true } }, // 'precio' es necesario para saber si es Premium/Estándar
                     },
                 },
                 comprobantes: true,
@@ -94,8 +94,8 @@ export class PagosService {
             include: {
                 solicitudes: {
                     include: {
-                        marcas: { select: { nombre_marca: true, id_usuario: true } },
-                        espacios: { select: { numero_espacio: true } },
+                        marcas: true,
+                        espacios: { select: { numero_espacio: true, precio: true } },
                     },
                 },
                 comprobantes: true,

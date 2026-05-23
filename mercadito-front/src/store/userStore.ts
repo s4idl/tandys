@@ -22,12 +22,7 @@ export const useUserStore = create<UserStore>((set) => ({
   
   setShowAuthModal: (show) => set({ showAuthModal: show }),
   setUserType: (t) => {
-    // Para facilitar pruebas de UI: Si cambiamos a brand o admin con el switcher, fíngimos estar logueados
-    if (t === 'brand' || t === 'admin') {
-      set({ userType: t, isAuthenticated: true });
-    } else {
-      set({ userType: t, isAuthenticated: !!localStorage.getItem('token') });
-    }
+    set({ userType: t });
   },
   
   login: (token, type = 'brand') => {

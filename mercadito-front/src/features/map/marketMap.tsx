@@ -4,8 +4,9 @@ import { Stage, Layer, Rect, Image as KonvaImage, Text, Group, Transformer } fro
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type Konva from 'konva';
 import { useMapStore } from '../../store/mapStore';
-import type { Space } from '../../types';
+import type { Space, SpaceStatus } from '../../types';
 import svgUrl from '../../assets/mapa-maestro.svg';
+import api from '../../services/axios';
 
 // ── SVG canvas dimensions & content crop ─────────────────────────────────────
 // The SVG canvas is 800×600 but actual drawing content sits within:
@@ -219,6 +220,13 @@ const LegendContent: React.FC<{ hideTitle?: boolean }> = ({ hideTitle }) => (
 
 
 // ── MarketMap ─────────────────────────────────────────────────────────────────
+// Map backend estado → frontend SpaceStatus
+const estadoToStatus = (estado: string): SpaceStatus => {
+  if (estado === 'ocupado')    return 'occupied';
+  if (estado === 'solicitado' || estado === 'pendiente_pago') return 'pending';
+  return 'available';
+};
+
 const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
   const spaces = useMapStore((s) => s.spaces);
   const selectedSpace = useMapStore((s) => s.selectedSpace);
@@ -231,6 +239,30 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
 
   const [stallCount, setStallCount] = useState(27);
   const [isLegendOpen, setIsLegendOpen] = useState(false);
+
+  // ── Sync real DB spaces into the visual map ────────────────────────────────
+  // Reusable: called on mount AND after every generateLayout so dbIds are
+  // always populated even when the store rebuilds the spaces array.
+  const syncFromDB = useCallback(() => {
+    api.get('/espacios')
+      .then(({ data }: { data: any[] }) => {
+        data.forEach((dbSpace) => {
+          const match = useMapStore.getState().spaces.find(
+            (s) => s.label?.toUpperCase() === String(dbSpace.numero_espacio).toUpperCase()
+          );
+          if (!match) return;
+          updateSpace(match.id, {
+            dbId:   dbSpace.id_espacio,
+            status: estadoToStatus(dbSpace.estado ?? 'disponible'),
+            precio: dbSpace.precio != null ? Number(dbSpace.precio) : match.precio,
+          });
+        });
+      })
+      .catch(() => { /* silently fail — map stays in local-only mode */ });
+  }, [updateSpace]);
+
+  // Run once on mount
+  useEffect(() => { syncFromDB(); }, [syncFromDB]);
 
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
@@ -651,7 +683,7 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
 
           {/* Generar Layout button */}
           <button
-            onClick={() => generateLayout(stallCount)}
+            onClick={() => { generateLayout(stallCount); setTimeout(syncFromDB, 50); }}
             style={{
               padding: '10px 0', borderRadius: 12, border: 'none',
               background: 'linear-gradient(135deg, #7b1430, #c8748a)',

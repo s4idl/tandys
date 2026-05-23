@@ -752,3 +752,33 @@
   from { opacity: 0; transform: translateY(-10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Logout button ─────────────────────────────────────────────────────────── */
+.prf-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  background: rgba(220, 38, 38, 0.06);
+  color: #b91c1c;
+  border: 1px solid rgba(220, 38, 38, 0.18);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  align-self: center;
+}
+
+.prf-logout-btn:hover {
+  background: rgba(220, 38, 38, 0.12);
+  border-color: rgba(220, 38, 38, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.12);
+}
+
+.prf-logout-btn:active {
+  transform: translateY(0);
+}
