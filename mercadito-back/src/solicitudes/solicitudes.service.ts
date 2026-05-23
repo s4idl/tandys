@@ -42,6 +42,13 @@ export class SolicitudesService {
       include: {
         marcas: { select: { id_marca: true, nombre_marca: true } },
         espacios: { select: { id_espacio: true, numero_espacio: true, precio: true } },
+        pagos: {
+          select: {
+            id_pago: true,
+            estado: true,
+            comprobantes: { select: { id_comprobante: true } }
+          }
+        }
       },
       orderBy: { fecha_solicitud: 'desc' },
     });

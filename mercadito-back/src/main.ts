@@ -5,6 +5,8 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors(); // 👈 Habilitar CORS para evitar el Network Error en el frontend
+
   app.setGlobalPrefix('api'); // 👈 prefijo global, aquí se guardan todas las rutas
 
   app.useGlobalPipes(
