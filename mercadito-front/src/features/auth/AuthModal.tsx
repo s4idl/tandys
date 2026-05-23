@@ -32,8 +32,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, defaultTab = 'login' }) 
       if (activeTab === 'login') {
         const { data } = await api.post('/auth/login', { correo, contrasena });
         login(data.access_token);
+        const { userType } = useUserStore.getState();
         onClose();
-        navigate('/mi-marca');
+        if (userType === 'admin') navigate('/solicitudes');
+        else if (userType === 'brand') navigate('/mi-marca');
+        else navigate('/');
       } else {
         // Register flow: Backend returns { message, user }
         // We register with 'vendedor' so they can create brands
@@ -48,8 +51,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ onClose, defaultTab = 'login' }) 
         // After successful registration, we need to log them in automatically
         const { data } = await api.post('/auth/login', { correo, contrasena });
         login(data.access_token);
+        const { userType } = useUserStore.getState();
         onClose();
-        navigate('/mi-marca', { state: { autoOpenWizard: true } });
+        if (userType === 'admin') navigate('/solicitudes');
+        else if (userType === 'brand') navigate('/mi-marca', { state: { autoOpenWizard: true } });
+        else navigate('/');
       }
     } catch (err: any) {
       if (err.response?.data?.message) {

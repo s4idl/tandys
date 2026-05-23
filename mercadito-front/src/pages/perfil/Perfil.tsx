@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/axios';
+import { useUserStore } from '../../store/userStore';
 import './Perfil.css';
 
 // ── TikTok icon ────────────────────────────────────────────────────────────────
@@ -287,6 +288,11 @@ const Perfil: React.FC = () => {
     }
   };
 
+  const handleLogout = () => {
+    useUserStore.getState().logout();
+    navigate('/');
+  };
+
   useEffect(() => { fetchPerfil(); }, []);
 
   const selectedMarca = data?.marcas.find((m) => m.id_marca === selectedMarcaId) ?? null;
@@ -378,6 +384,27 @@ const Perfil: React.FC = () => {
               </div>
               <div className="prf-stat-lbl">Solicitudes</div>
             </div>
+          </div>
+
+          <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
+            <button 
+              onClick={handleLogout}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                background: 'rgba(239, 68, 68, 0.1)',
+                color: '#ef4444',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '13px'
+              }}
+            >
+              <XCircle size={14} /> Cerrar Sesión
+            </button>
           </div>
         </div>
 

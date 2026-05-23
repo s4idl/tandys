@@ -11,8 +11,10 @@ import {
   ClipboardList,
   Settings,
   ChevronUp,
+  LogIn,
 } from 'lucide-react';
 import tandyslogo from '../../assets/tandyslogo.png';
+import { useUserStore } from '../../store/userStore';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export type UserType = 'user' | 'brand' | 'admin';
@@ -52,45 +54,28 @@ const getNavItems = (userType: UserType): NavItem[] => {
       return [
         { id: 'map',    label: 'Mapa',          icon: <Map size={24} />,    path: '/' },
         { id: 'search', label: 'Buscar marca',  icon: <Search size={24} />, path: '/buscar' },
-        { id: 'profile',label: 'Perfil',        icon: <User size={24} />,   path: '/perfil' },
+        { id: 'login',  label: 'Iniciar sesión',icon: <LogIn size={24} />,  path: '#' },
       ];
   }
 };
 
-// ── Role labels for dev switcher ──────────────────────────────────────────────
-const ROLE_CYCLE: UserType[] = ['user', 'brand', 'admin'];
-const ROLE_LABELS: Record<UserType, string> = {
-  user:  '👤 User',
-  brand: '🏪 Brand',
-  admin: '🔑 Admin',
-};
-const ROLE_COLORS: Record<UserType, string> = {
-  user:  'rgba(99,102,241,0.85)',
-  brand: 'rgba(236,72,153,0.85)',
-  admin: 'rgba(30,58,95,0.9)',
-};
-
 // ── Component ─────────────────────────────────────────────────────────────────
-const Navbar: React.FC<NavbarProps> = ({ userType: externalType, onUserTypeChange }) => {
+const Navbar: React.FC<NavbarProps> = ({ userType }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Internal dev state — overridden by external prop if provided
-  const [internalType, setInternalType] = useState<UserType>('user');
-  const [showRolePicker, setShowRolePicker] = useState(false);
-
-  const activeType = externalType ?? internalType;
-
-  const handleRoleChange = (t: UserType) => {
-    setInternalType(t);
-    onUserTypeChange?.(t);
-    setShowRolePicker(false);
-  };
-
-  const items = getNavItems(activeType);
+  const items = getNavItems(userType || 'user');
 
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+
+  const handleTabClick = (item: NavItem) => {
+    if (item.id === 'login') {
+      useUserStore.getState().setShowAuthModal(true);
+      return;
+    }
+    navigate(item.path);
+  };
 
   return (
     <>
@@ -107,57 +92,19 @@ const Navbar: React.FC<NavbarProps> = ({ userType: externalType, onUserTypeChang
             <button
               key={item.id}
               id={`nav-${item.id}`}
-              className={`navbar-tab${active ? ' navbar-tab--active' : ''}`}
-              onClick={() => navigate(item.path)}
+              className={`navbar-tab${active && item.id !== 'login' ? ' navbar-tab--active' : ''}`}
+              onClick={() => handleTabClick(item)}
               aria-current={active ? 'page' : undefined}
               title={item.label}
             >
               <span className="navbar-tab-icon">{item.icon}</span>
-              <span className={`navbar-tab-label${active ? ' navbar-tab-label--active' : ''}`}>
+              <span className={`navbar-tab-label${active && item.id !== 'login' ? ' navbar-tab-label--active' : ''}`}>
                 {item.label}
               </span>
             </button>
           );
         })}
       </nav>
-
-      {/* ── Dev: Role Switcher ────────────────────────────────────────────── */}
-      <div className="dev-role-switcher">
-        {/* Popup picker */}
-        {showRolePicker && (
-          <div className="dev-role-picker">
-            {ROLE_CYCLE.map((role) => (
-              <button
-                key={role}
-                className={`dev-role-option${activeType === role ? ' dev-role-option--active' : ''}`}
-                style={{ '--role-color': ROLE_COLORS[role] } as React.CSSProperties}
-                onClick={() => handleRoleChange(role)}
-              >
-                {ROLE_LABELS[role]}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Main dev button */}
-        <button
-          id="dev-switch-role"
-          className="dev-role-btn"
-          style={{ background: ROLE_COLORS[activeType] }}
-          onClick={() => setShowRolePicker((v) => !v)}
-          title="Dev: cambiar rol"
-        >
-          <ChevronUp
-            size={12}
-            style={{
-              transform: showRolePicker ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.2s',
-              opacity: 0.7,
-            }}
-          />
-          <span>{ROLE_LABELS[activeType]}</span>
-        </button>
-      </div>
     </>
   );
 };

@@ -45,7 +45,7 @@ const MapPage = () => {
       </div>
 
       {/* Floating tab bar + fixed logo */}
-      <Navbar userType={userType} onUserTypeChange={setUserType} />
+      <Navbar userType={userType} />
 
       {/* Top-right Action Button (Only for authenticated users) */}
       {isAuthenticated && (
@@ -73,7 +73,7 @@ const InnerShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div style={{ position: 'relative', minHeight: '100vh', overflowY: 'auto', overflowX: 'hidden' }}>
       {children}
-      <Navbar userType={userType} onUserTypeChange={setUserType} />
+      <Navbar userType={userType} />
     </div>
   );
 };

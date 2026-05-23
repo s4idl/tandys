@@ -12,6 +12,11 @@ interface Solicitud {
   comentario_admin: string | null;
   marcas:   { id_marca: number; nombre_marca: string };
   espacios: { id_espacio: number; numero_espacio: string; precio: number };
+  pagos?: {
+    id_pago: number;
+    estado: 'pendiente' | 'verificado' | 'rechazado';
+    comprobantes?: { id_comprobante: number } | null;
+  } | null;
 }
 
 const ESTADO_LABEL: Record<string, string> = {
@@ -156,8 +161,8 @@ const Solicitudes: React.FC = () => {
                       <FileText size={16} /> Ver estado
                     </button>
 
-                    {/* Only show "Realizar pago" for accepted solicitudes */}
-                    {sol.estado === 'aceptada' && (
+                    {/* Only show "Realizar pago" for accepted solicitudes if no comprobante is uploaded or if rejected */}
+                    {sol.estado === 'aceptada' && (!sol.pagos?.comprobantes || sol.pagos?.estado === 'rechazado') && (
                       <button
                         className="sol-payment-btn"
                         style={{ background: 'linear-gradient(135deg, rgba(123,20,48,0.08), rgba(200,116,138,0.08))', borderColor: 'rgba(123,20,48,0.3)', color: '#7b1430' }}
@@ -240,28 +245,34 @@ const Solicitudes: React.FC = () => {
                 </div>
 
                 {/* Step 3: payment */}
-                <div className={`sol-timeline-item ${statusModal.estado === 'aceptada' ? 'warning' : 'pending'}`}>
-                  <div className="sol-timeline-icon">3</div>
+                <div className={`sol-timeline-item ${statusModal.estado === 'aceptada' && (!statusModal.pagos?.comprobantes || statusModal.pagos?.estado === 'rechazado') ? 'warning' : statusModal.pagos?.comprobantes ? 'completed' : 'pending'}`}>
+                  <div className="sol-timeline-icon">
+                    {statusModal.pagos?.comprobantes && statusModal.pagos?.estado !== 'rechazado' ? <Check size={14} strokeWidth={3} /> : '3'}
+                  </div>
                   <div className="sol-timeline-content">
                     <span className="sol-timeline-title">Pago y comprobante</span>
                     <span className="sol-timeline-desc">
-                      {statusModal.estado === 'aceptada' ? 'Pendiente de pago' : 'Esperando aprobación'}
+                      {statusModal.pagos?.estado === 'rechazado' ? 'Comprobante rechazado (Vuelve a intentarlo)' : statusModal.pagos?.comprobantes ? 'Comprobante enviado' : statusModal.estado === 'aceptada' ? 'Pendiente de pago' : 'Esperando aprobación'}
                     </span>
                   </div>
                 </div>
 
                 {/* Step 4: confirmed */}
-                <div className="sol-timeline-item pending">
-                  <div className="sol-timeline-icon">4</div>
+                <div className={`sol-timeline-item ${statusModal.pagos?.estado === 'verificado' ? 'completed' : statusModal.pagos?.estado === 'pendiente' && statusModal.pagos?.comprobantes ? 'warning' : 'pending'}`}>
+                  <div className="sol-timeline-icon">
+                    {statusModal.pagos?.estado === 'verificado' ? <Check size={14} strokeWidth={3} /> : '4'}
+                  </div>
                   <div className="sol-timeline-content">
                     <span className="sol-timeline-title">Espacio confirmado</span>
-                    <span className="sol-timeline-desc">Pendiente</span>
+                    <span className="sol-timeline-desc">
+                      {statusModal.pagos?.estado === 'verificado' ? '¡Tu espacio está asegurado!' : statusModal.pagos?.comprobantes && statusModal.pagos?.estado === 'pendiente' ? 'Verificando pago…' : 'Pendiente'}
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* CTA inside modal */}
-              {statusModal.estado === 'aceptada' && (
+              {statusModal.estado === 'aceptada' && (!statusModal.pagos?.comprobantes || statusModal.pagos?.estado === 'rechazado') && (
                 <button
                   className="sol-buy-btn"
                   onClick={() => { setStatusModal(null); handleIrAPagar(statusModal); }}

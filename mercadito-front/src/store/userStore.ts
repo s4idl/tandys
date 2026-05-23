@@ -1,6 +1,23 @@
 import { create } from 'zustand';
 import type { UserType } from '../features/ui/Navbar';
 
+function parseJwt(token: string) {
+  try {
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch (e) {
+    return null;
+  }
+}
+
+function getRoleFromToken(token: string | null): UserType {
+  if (!token) return 'user';
+  const payload = parseJwt(token);
+  if (!payload || !payload.rol) return 'user';
+  if (payload.rol === 'admin') return 'admin';
+  if (payload.rol === 'vendedor') return 'brand';
+  return 'user';
+}
+
 interface UserStore {
   userType: UserType;
   isAuthenticated: boolean;
@@ -8,30 +25,24 @@ interface UserStore {
   showAuthModal: boolean;
   setShowAuthModal: (show: boolean) => void;
   setUserType: (t: UserType) => void;
-  login: (token: string, type?: UserType) => void;
+  login: (token: string) => void;
   logout: () => void;
 }
 
 const initialToken = localStorage.getItem('token');
 
 export const useUserStore = create<UserStore>((set) => ({
-  userType: initialToken ? 'brand' : 'user', // Defaults: Si hay token asumimos brand/vendedor por ahora, sino user (visitante)
+  userType: getRoleFromToken(initialToken),
   isAuthenticated: !!initialToken,
   token: initialToken,
   showAuthModal: false,
   
   setShowAuthModal: (show) => set({ showAuthModal: show }),
-  setUserType: (t) => {
-    // Para facilitar pruebas de UI: Si cambiamos a brand o admin con el switcher, fíngimos estar logueados
-    if (t === 'brand' || t === 'admin') {
-      set({ userType: t, isAuthenticated: true });
-    } else {
-      set({ userType: t, isAuthenticated: !!localStorage.getItem('token') });
-    }
-  },
+  setUserType: (t) => set({ userType: t, isAuthenticated: !!localStorage.getItem('token') }),
   
-  login: (token, type = 'brand') => {
+  login: (token) => {
     localStorage.setItem('token', token);
+    const type = getRoleFromToken(token);
     set({ token, isAuthenticated: true, userType: type, showAuthModal: false });
   },
   

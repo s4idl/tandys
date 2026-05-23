@@ -353,7 +353,7 @@ const SubirView: React.FC<{
       if (!currentPagoId) {
         const { data: pagoData } = await api.post('/pagos', {
           id_solicitud: solId,
-          monto: solicitudes.find(s => s.id_solicitud === solId)?.espacios?.precio ?? 350,
+          monto: Number(solicitudes.find(s => s.id_solicitud === solId)?.espacios?.precio ?? 350),
           metodo_pago: 'transferencia',
         });
         currentPagoId = pagoData.id_pago;
