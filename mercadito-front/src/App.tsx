@@ -8,6 +8,7 @@ import Solicitudes from './pages/Solicitudes/Solicitudes';
 import MisMarcas from './pages/miMarca/MisMarcas';
 import Pagos from './pages/pagos/Pagos';
 import Perfil from './pages/perfil/Perfil';
+import GestionAdmin from './pages/admin/GestionAdmin';
 import { useUserStore } from './store/userStore';
 import './App.css';
 
@@ -78,6 +79,15 @@ const InnerShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
+// ─── Route Wrapper para Solicitudes / Gestión ───────────────────────────────
+const SolicitudesRoute = () => {
+  const { userType } = useUserStore();
+  if (userType === 'admin') {
+    return <GestionAdmin />;
+  }
+  return <Solicitudes />;
+};
+
 // ─── Root ─────────────────────────────────────────────────────────────────────
 function App() {
   const { showAuthModal, setShowAuthModal } = useUserStore();
@@ -89,7 +99,7 @@ function App() {
 
       <Routes>
         <Route path="/" element={<MapPage />} />
-        <Route path="/solicitudes" element={<ProtectedRoute><InnerShell><Solicitudes /></InnerShell></ProtectedRoute>} />
+        <Route path="/solicitudes" element={<ProtectedRoute><InnerShell><SolicitudesRoute /></InnerShell></ProtectedRoute>} />
         <Route path="/pagos" element={<ProtectedRoute><InnerShell><Pagos /></InnerShell></ProtectedRoute>} />
         <Route path="/mi-marca" element={<ProtectedRoute><InnerShell><MisMarcas /></InnerShell></ProtectedRoute>} />
         <Route path="/perfil" element={<ProtectedRoute><InnerShell><Perfil /></InnerShell></ProtectedRoute>} />
