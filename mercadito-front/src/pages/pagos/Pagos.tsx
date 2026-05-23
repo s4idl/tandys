@@ -21,7 +21,7 @@ import './Pagos.css';
 interface Solicitud {
   id_solicitud: number;
   estado: string;
-  espacios: { numero_espacio: string };
+  espacios: { numero_espacio: string; precio?: number };
   marcas: { nombre_marca: string };
 }
 

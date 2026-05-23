@@ -9,6 +9,7 @@ import MisMarcas from './pages/miMarca/MisMarcas';
 import Pagos from './pages/pagos/Pagos';
 import Perfil from './pages/perfil/Perfil';
 import GestionAdmin from './pages/admin/GestionAdmin';
+import DashboardAdmin from './pages/admin/DashboardAdmin';
 import { useUserStore } from './store/userStore';
 import './App.css';
 
@@ -103,6 +104,7 @@ function App() {
         <Route path="/pagos" element={<ProtectedRoute><InnerShell><Pagos /></InnerShell></ProtectedRoute>} />
         <Route path="/mi-marca" element={<ProtectedRoute><InnerShell><MisMarcas /></InnerShell></ProtectedRoute>} />
         <Route path="/perfil" element={<ProtectedRoute><InnerShell><Perfil /></InnerShell></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><InnerShell><DashboardAdmin /></InnerShell></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );

@@ -15,7 +15,6 @@ import {
   RefreshCw,
   DollarSign,
   Tag,
-  FlaskConical,
   Plus,
   LogOut,
 } from 'lucide-react';
