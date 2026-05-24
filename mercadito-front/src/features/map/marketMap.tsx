@@ -36,7 +36,7 @@ const THEME = {
   },
   pending: {
     estandar: { fill: '#f1f5f9', stroke: '#94a3b8', strokeWidth: 1.4 },
-    premium: { fill: '#e2e8f0', stroke: '#64748b', strokeWidth: 1.6 },
+    premium: { fill: '#e2e8f0', stroke: '#94a3b8', strokeWidth: 1.4 },
   },
 };
 
@@ -89,13 +89,15 @@ const StallNode: React.FC<StallNodeProps> = ({
   // We show premium colors/stars to Admins AND Brands (isBrand)
   const showPremiumDetails = isAdmin || isBrand;
 
-  // Si es usuario normal, mantenemos un gris muy limpio y estándar
-  const fillColor = (!showPremiumDetails && status === 'available') ? '#f8fafc' : theme.fill;
+  // Si es usuario normal, escondemos detalles premium Y ocultamos los estados "pendientes"
+  // (los pendientes se ven como "disponibles estándar" para usuarios normales)
+  const isGenericAvailable = !showPremiumDetails && status !== 'occupied';
+  const fillColor = isGenericAvailable ? '#f8fafc' : theme.fill;
 
-  // Highlight de selección (azul) > Neutral (gris) para usuarios > Tema original (oro/verde) para admins/brands
+  // Highlight de selección (azul) > Neutral (gris) para usuarios > Tema original para admins/brands
   const strokeColor = isSelected
     ? '#3b82f6'
-    : (!showPremiumDetails && status === 'available')
+    : isGenericAvailable
       ? '#cbd5e1'
       : theme.stroke;
 
@@ -213,7 +215,7 @@ const LegendContent: React.FC<{ hideTitle?: boolean }> = ({ hideTitle }) => (
 
       {/* Pending */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 18, height: 12, borderRadius: 3, background: '#f1f5f9', border: '1.5px dashed #94a3b8', flexShrink: 0 }} />
+        <div style={{ width: 18, height: 12, borderRadius: 3, background: '#f1f5f9', border: '1.5px solid #94a3b8', flexShrink: 0 }} />
         <span style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>En revisión</span>
       </div>
 
