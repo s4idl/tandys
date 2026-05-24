@@ -4,6 +4,7 @@ import { Stage, Layer, Rect, Circle, Image as KonvaImage, Text, Group, Transform
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type Konva from 'konva';
 import { useMapStore } from '../../store/mapStore';
+import { useUserStore } from '../../store/userStore';
 import type { Space } from '../../types';
 import svgUrl from '../../assets/mapa-maestro.svg';
 import api from '../../services/axios';
