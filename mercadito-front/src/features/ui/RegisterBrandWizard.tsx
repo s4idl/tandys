@@ -153,7 +153,7 @@ const RegisterBrandWizard: React.FC<Props> = ({ onClose, onSuccess, marcaToEdit 
       };
 
       if (isEdit && marcaToEdit) {
-        await api.put(`/marcas/${marcaToEdit.id_marca}`, payload);
+        await api.patch(`/marcas/${marcaToEdit.id_marca}`, payload);
       } else {
         await api.post('/marcas', payload);
       }
