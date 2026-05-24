@@ -35,8 +35,8 @@ const THEME = {
     premium: { fill: '#2d1a08', stroke: '#92400e', strokeWidth: 1.5 },
   },
   pending: {
-    estandar: { fill: '#fefce8', stroke: '#fde047', strokeWidth: 1.4 },
-    premium: { fill: '#fef3c7', stroke: '#f59e0b', strokeWidth: 1.6 },
+    estandar: { fill: '#f1f5f9', stroke: '#94a3b8', strokeWidth: 1.4 },
+    premium: { fill: '#e2e8f0', stroke: '#64748b', strokeWidth: 1.6 },
   },
 };
 
@@ -95,7 +95,7 @@ const StallNode: React.FC<StallNodeProps> = ({
   // Highlight de selección (azul) > Neutral (gris) para usuarios > Tema original (oro/verde) para admins/brands
   const strokeColor = isSelected
     ? '#3b82f6'
-    : (!showPremiumDetails && status !== 'occupied')
+    : (!showPremiumDetails && status === 'available')
       ? '#cbd5e1'
       : theme.stroke;
 
@@ -213,7 +213,7 @@ const LegendContent: React.FC<{ hideTitle?: boolean }> = ({ hideTitle }) => (
 
       {/* Pending */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 18, height: 12, borderRadius: 3, background: '#fefce8', border: '1.5px dashed #fde047', flexShrink: 0 }} />
+        <div style={{ width: 18, height: 12, borderRadius: 3, background: '#f1f5f9', border: '1.5px dashed #94a3b8', flexShrink: 0 }} />
         <span style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>En revisión</span>
       </div>
 
