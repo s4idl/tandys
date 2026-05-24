@@ -24,6 +24,10 @@ model espacios {
   estado         estado_espacio? @default(disponible)
   coordenada_x   Int?
   coordenada_y   Int?
+  ancho          Int?
+  alto           Int?
+  rotacion       Float?
+  nombre         String?         @db.VarChar(50)
   mercaditos     mercaditos      @relation(fields: [id_mercadito], references: [id_mercadito], onDelete: Cascade, map: "fk_espacio_mercadito")
   solicitudes    solicitudes[]
 }

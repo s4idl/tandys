@@ -5,6 +5,8 @@ import {
   Param,
   UseGuards,
   ParseIntPipe,
+  Put,
+  Body,
 } from '@nestjs/common';
 import { EspaciosService } from './espacios.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -44,5 +46,16 @@ export class EspaciosController {
   @Patch(':id/liberar')
   liberar(@Param('id', ParseIntPipe) id: number) {
     return this.espaciosService.liberar(id);
+  }
+
+  // PUT /api/espacios/layout/:mercaditoId — admin guarda el layout completo
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @Put('layout/:mercaditoId')
+  updateLayout(
+    @Param('mercaditoId', ParseIntPipe) mercaditoId: number,
+    @Body() data: any[]
+  ) {
+    return this.espaciosService.updateLayout(mercaditoId, data);
   }
 }
