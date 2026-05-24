@@ -171,6 +171,26 @@ const Solicitudes: React.FC = () => {
                         <CreditCard size={16} /> Realizar pago
                       </button>
                     )}
+
+                    {/* Redemption buttons for rejected requests */}
+                    {sol.estado === 'rechazada' && (
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          className="sol-payment-btn"
+                          style={{ background: '#fff', borderColor: '#d1d5db', color: '#374151' }}
+                          onClick={() => navigate('/mi-marca', { state: { autoEditMarcaId: sol.marcas.id_marca } })}
+                        >
+                          Editar perfil
+                        </button>
+                        <button
+                          className="sol-payment-btn"
+                          style={{ background: '#fef2f2', borderColor: '#fecaca', color: '#dc2626' }}
+                          onClick={() => navigate('/')}
+                        >
+                          Buscar otro espacio
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                 </div>

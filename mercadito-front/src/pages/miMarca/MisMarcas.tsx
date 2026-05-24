@@ -176,9 +176,18 @@ const MisMarcas: React.FC = () => {
     if (location.state?.autoOpenWizard) {
       setShowWizard(true);
       // Clean up the state so it doesn't reopen on refresh
-      navigate(location.pathname, { replace: true, state: {} });
+      navigate(location.pathname, { replace: true, state: { ...location.state, autoOpenWizard: undefined } });
     }
-  }, [location.state, navigate, location.pathname]);
+
+    // If redirected from rejected request to edit a specific brand
+    if (location.state?.autoEditMarcaId && marcas.length > 0) {
+      const toEdit = marcas.find(m => m.id_marca === location.state.autoEditMarcaId);
+      if (toEdit) {
+        setEditingMarca(toEdit);
+      }
+      navigate(location.pathname, { replace: true, state: { ...location.state, autoEditMarcaId: undefined } });
+    }
+  }, [location.state, navigate, location.pathname, marcas]);
 
   const handleRegistrarMarca = () => setShowWizard(true);
 

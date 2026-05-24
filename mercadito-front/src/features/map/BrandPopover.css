@@ -1,0 +1,150 @@
+.brand-popover-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 20px;
+  /* El overlay no bloquea los clics en el mapa si clickeas afuera, pero intercepta clicks si no agregamos logic, 
+     en lugar de pointer-events auto total, dejaremos q el contenedor central tenga auto */
+}
+
+.brand-popover-card {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0,0,0,0.05);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 360px;
+  padding: 24px;
+  position: relative;
+  animation: slideUpPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: 'Inter', sans-serif;
+  z-index: 100;
+}
+
+.brand-popover-tail {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 16px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border-right: 1px solid rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 4px 4px 10px rgba(0,0,0,0.05);
+}
+
+@keyframes slideUpPop {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.brand-popover-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #f1f5f9;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.brand-popover-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.brand-popover-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.brand-popover-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: #fdf2f8;
+  border: 2px solid #fbcfe8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: 0 8px 16px rgba(219, 39, 119, 0.15);
+}
+.brand-popover-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.brand-popover-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 6px 0;
+  line-height: 1.2;
+}
+
+.brand-popover-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(123, 20, 48, 0.1);
+  color: #7b1430;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.brand-popover-desc {
+  font-size: 14px;
+  color: #64748b;
+  text-align: center;
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 12px;
+}
+
+.brand-popover-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.brand-social-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+}
+.brand-social-btn:active { transform: scale(0.95); }
+
+.brand-social-btn--ig { background: rgba(225, 48, 108, 0.1); color: #e1306c; }
+.brand-social-btn--fb { background: rgba(66, 103, 178, 0.1); color: #4267B2; }
+.brand-social-btn--tiktok { background: #f1f5f9; color: #0f172a; }

@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class EspaciosService {
   constructor(private prisma: PrismaService) { }
 
-  // GET /api/espacios — todos los espacios con datos del mercadito (para el mapa)
+  // GET /api/espacios — todos los espacios con datos del mercadito y marca ocupante (para el mapa)
   async findAll() {
     return this.prisma.espacios.findMany({
       include: {
@@ -16,6 +16,12 @@ export class EspaciosService {
             fecha: true,
             lugar: true,
             estado: true,
+          },
+        },
+        solicitudes: {
+          where: { estado: 'aceptada' },
+          include: {
+            marcas: true,
           },
         },
       },

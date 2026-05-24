@@ -12,25 +12,26 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../auth/enums/role.enum';
 
-@UseGuards(JwtAuthGuard)
 @Controller('espacios')
 export class EspaciosController {
   constructor(private readonly espaciosService: EspaciosService) { }
 
   // GET /api/espacios — todos los espacios (para el mapa del frontend)
+  // PUBLICO para que los visualizadores puedan ver el mapa
   @Get()
   findAll() {
     return this.espaciosService.findAll();
   }
 
   // GET /api/espacios/:id — detalle de un espacio
+  // PUBLICO
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.espaciosService.findOne(id);
   }
 
   // PATCH /api/espacios/:id/asignar — admin marca espacio como ocupado
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Patch(':id/asignar')
   asignar(@Param('id', ParseIntPipe) id: number) {
@@ -38,7 +39,7 @@ export class EspaciosController {
   }
 
   // PATCH /api/espacios/:id/liberar — admin libera espacio (disponible)
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN)
   @Patch(':id/liberar')
   liberar(@Param('id', ParseIntPipe) id: number) {

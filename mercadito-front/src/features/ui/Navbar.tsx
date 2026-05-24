@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import tandyslogo from '../../assets/tandyslogo.png';
 import { useUserStore } from '../../store/userStore';
+import { useMapStore } from '../../store/mapStore';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export type UserType = 'user' | 'brand' | 'admin';
@@ -64,6 +65,11 @@ const Navbar: React.FC<NavbarProps> = ({ userType }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [showSearch, setShowSearch] = useState(false);
+  const [query, setQuery] = useState('');
+  const spaces = useMapStore(s => s.spaces);
+  const selectSpace = useMapStore(s => s.selectSpace);
+
   const items = getNavItems(userType || 'user');
 
   const isActive = (path: string) =>
@@ -74,8 +80,29 @@ const Navbar: React.FC<NavbarProps> = ({ userType }) => {
       useUserStore.getState().setShowAuthModal(true);
       return;
     }
+    if (item.id === 'search') {
+      setShowSearch(!showSearch);
+      setQuery('');
+      return;
+    }
+    // Si da click en otro tab, cerramos la barra de búsqueda
+    setShowSearch(false);
     navigate(item.path);
   };
+
+  const handleResultClick = (space: any) => {
+    selectSpace(space, null);
+    setShowSearch(false);
+    setQuery('');
+  };
+
+  // Filtrar locales ocupados
+  const searchResults = query.trim().length > 0 
+    ? spaces.filter(s => 
+        s.status === 'occupied' && 
+        s.marca_ocupante?.nombre_marca?.toLowerCase().includes(query.toLowerCase())
+      )
+    : [];
 
   return (
     <>
@@ -84,10 +111,60 @@ const Navbar: React.FC<NavbarProps> = ({ userType }) => {
         <img src={tandyslogo} alt="Tandys" className="navbar-logo-img" />
       </div>
 
+      {/* ── Search Bar Overlay ───────────────────────────────────────────── */}
+      {showSearch && (
+        <div className="navbar-search-overlay">
+          <div className="navbar-search-container">
+            <div className="navbar-search-input-wrap">
+              <Search size={18} className="navbar-search-icon" />
+              <input 
+                type="text" 
+                className="navbar-search-input" 
+                placeholder="Busca el nombre de una marca..." 
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                autoFocus
+              />
+            </div>
+            {query.trim().length > 0 && (
+              <div className="navbar-search-results">
+                {searchResults.length > 0 ? (
+                  searchResults.map(s => (
+                    <button 
+                      key={s.id} 
+                      className="navbar-search-result-item"
+                      onClick={() => handleResultClick(s)}
+                    >
+                      <div className="navbar-search-avatar">
+                        {s.marca_ocupante?.logo_url ? (
+                          <img src={s.marca_ocupante.logo_url} alt="" />
+                        ) : (
+                          <span>{s.marca_ocupante?.nombre_marca?.substring(0,2).toUpperCase()}</span>
+                        )}
+                      </div>
+                      <div className="navbar-search-info">
+                        <strong>{s.marca_ocupante?.nombre_marca}</strong>
+                        <span>Local {s.label}</span>
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="navbar-search-empty">No se encontraron marcas</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Floating Tab Bar ─────────────────────────────────────────────── */}
       <nav className="navbar-tabbar" aria-label="Navegación principal">
         {items.map((item) => {
-          const active = isActive(item.path);
+          // If search is open, ONLY the search tab is active. Otherwise, rely on the route path.
+          const active = showSearch 
+            ? item.id === 'search' 
+            : isActive(item.path);
+
           return (
             <button
               key={item.id}

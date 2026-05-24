@@ -323,12 +323,12 @@ const RegisterBrandWizard: React.FC<Props> = ({ onClose, onSuccess, marcaToEdit 
                   rows={5}
                   value={form.descripcion}
                   onChange={update('descripcion')}
-                  maxLength={50}
+                  maxLength={120}
                   autoFocus
                 />
                 <div className="rbw-counter-row">
-                  <span className="rbw-hint">El límite actual es de 50 caracteres.</span>
-                  <span className="rbw-counter">{form.descripcion.length}/50</span>
+                  <span className="rbw-hint">El límite actual es de 120 caracteres.</span>
+                  <span className="rbw-counter">{form.descripcion.length}/120</span>
                 </div>
               </div>
             </div>

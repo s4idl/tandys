@@ -97,20 +97,23 @@ function buildLayout(): Space[] {
 interface MapStore {
   spaces:        Space[];
   selectedSpace: Space | null;
+  popoverPos:    { x: number, y: number } | null;
   lastVariant:   number;
 
   addSpace:            (x: number, y: number) => void;
   updateSpace:         (id: string, patch: Partial<Space>) => void;
   deleteSpace:         (id: string) => void;
   updateSpacePosition: (id: string, x: number, y: number) => void;
-  selectSpace:         (space: Space | null) => void;
+  selectSpace:         (space: Space | null, pos?: { x: number, y: number }) => void;
   generateLayout:      (count: number) => void;
   saveLayout:          () => void;
+  setSpaces:           (spaces: Space[]) => void;
 }
 
 export const useMapStore = create<MapStore>((set, get) => ({
   spaces:      buildLayout(),
   selectedSpace: null,
+  popoverPos:    null,
   lastVariant:   0,
 
   addSpace: (x, y) => {
@@ -135,7 +138,7 @@ export const useMapStore = create<MapStore>((set, get) => ({
     })),
 
   updateSpacePosition: (id, x, y) => get().updateSpace(id, { x, y }),
-  selectSpace: (space) => set({ selectedSpace: space }),
+  selectSpace: (space, pos) => set({ selectedSpace: space, popoverPos: pos || null }),
 
   generateLayout: (count) => {
     const n = Math.max(10, Math.min(27, count));
@@ -159,6 +162,8 @@ export const useMapStore = create<MapStore>((set, get) => ({
 
   saveLayout: () =>
     console.log('[saveLayout]', JSON.stringify(get().spaces, null, 2)),
+
+  setSpaces: (spaces) => set({ spaces }),
 }));
 
 export const STATUS_COLORS: Record<SpaceStatus, { fill: string; stroke: string; textColor: string }> = {

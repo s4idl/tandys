@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, X, MapPin, Calendar, Banknote, Store, Star } from 'lucide-react';
 import { useMapStore } from '../../store/mapStore';
+import { useUserStore } from '../../store/userStore';
 import api from '../../services/axios';
 import './RequestModal.css';
 
@@ -35,7 +36,8 @@ const RequestModal: React.FC<RequestModalProps> = ({ isAdmin }) => {
     }, [selectedSpace]);
 
     // Admins never request spaces — they manage them
-    if (isAdmin) return null;
+    const { isAuthenticated } = useUserStore();
+    if (isAdmin || !isAuthenticated) return null;
     if (!selectedSpace || selectedSpace.status !== 'available') return null;
 
     const isPremium = selectedSpace.tipo === 'premium';

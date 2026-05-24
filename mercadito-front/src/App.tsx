@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import MarketMap from './features/map/marketMap';
+import BrandPopover from './features/map/BrandPopover';
 import Navbar from './features/ui/Navbar';
 import RequestModal from './features/ui/RequestModal';
 import AuthModal from './features/auth/AuthModal';
@@ -9,6 +10,8 @@ import MisMarcas from './pages/miMarca/MisMarcas';
 import Pagos from './pages/pagos/Pagos';
 import Perfil from './pages/perfil/Perfil';
 import DashboardAdmin from './pages/admin/DashboardAdmin';
+import GestionAdmin from './pages/admin/GestionAdmin';
+import AjustesAdmin from './pages/admin/AjustesAdmin';
 import { useUserStore } from './store/userStore';
 import './App.css';
 
@@ -48,8 +51,8 @@ const MapPage = () => {
       {/* Floating tab bar + fixed logo */}
       <Navbar userType={userType} />
 
-      {/* Top-right Action Button (Only for authenticated users) */}
-      {isAuthenticated && (
+      {/* Top-right Action Button (Only for authenticated non-admins) */}
+      {isAuthenticated && !isAdmin && (
         <button
           className="btn-registrar-marca-fixed"
           onClick={() => navigate('/mi-marca', { state: { autoOpenWizard: true } })}
@@ -60,6 +63,9 @@ const MapPage = () => {
 
       {/* Request modal — self-renders when an available space is selected */}
       <RequestModal isAdmin={isAdmin} />
+      
+      {/* Brand Popover — self-renders when an occupied space is selected */}
+      <BrandPopover />
       
       {/* Auth Modal */}
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
@@ -79,6 +85,12 @@ const InnerShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
+// ─── Router for Solicitudes ───────────────────────────────────────────────────
+const SolicitudesRouter = () => {
+  const { userType } = useUserStore();
+  return userType === 'admin' ? <GestionAdmin /> : <Solicitudes />;
+};
+
 // ─── Root ─────────────────────────────────────────────────────────────────────
 function App() {
   const { showAuthModal, setShowAuthModal } = useUserStore();
@@ -90,11 +102,12 @@ function App() {
 
       <Routes>
         <Route path="/" element={<MapPage />} />
-        <Route path="/solicitudes" element={<ProtectedRoute><InnerShell><Solicitudes /></InnerShell></ProtectedRoute>} />
+        <Route path="/solicitudes" element={<ProtectedRoute><InnerShell><SolicitudesRouter /></InnerShell></ProtectedRoute>} />
         <Route path="/pagos" element={<ProtectedRoute><InnerShell><Pagos /></InnerShell></ProtectedRoute>} />
         <Route path="/mi-marca" element={<ProtectedRoute><InnerShell><MisMarcas /></InnerShell></ProtectedRoute>} />
         <Route path="/perfil" element={<ProtectedRoute><InnerShell><Perfil /></InnerShell></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><InnerShell><DashboardAdmin /></InnerShell></ProtectedRoute>} />
+        <Route path="/ajustes" element={<ProtectedRoute><InnerShell><AjustesAdmin /></InnerShell></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
   );

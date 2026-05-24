@@ -1,11 +1,13 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { RotateCcw, Settings, ChevronUp, Trash2 } from 'lucide-react';
-import { Stage, Layer, Rect, Image as KonvaImage, Text, Group, Transformer } from 'react-konva';
+import { Stage, Layer, Rect, Circle, Image as KonvaImage, Text, Group, Transformer } from 'react-konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type Konva from 'konva';
 import { useMapStore } from '../../store/mapStore';
+import { useUserStore } from '../../store/userStore';
 import type { Space } from '../../types';
 import svgUrl from '../../assets/mapa-maestro.svg';
+import api from '../../services/axios';
 
 // ── SVG canvas dimensions & content crop ─────────────────────────────────────
 // The SVG canvas is 800×600 but actual drawing content sits within:
@@ -38,36 +40,64 @@ const THEME = {
   },
 };
 
+const useImage = (url: string | undefined | null) => {
+  const [image, setImage] = useState<HTMLImageElement | null>(null);
+  useEffect(() => {
+    if (!url) { setImage(null); return; }
+    const img = new window.Image();
+    img.src = url;
+    img.onload = () => setImage(img);
+  }, [url]);
+  return image;
+};
+
 // ── StallNode ─────────────────────────────────────────────────────────────────
 interface StallNodeProps {
   space: Space;
   isAdmin: boolean;
+  isBrand: boolean;
   isSelected: boolean;
-  shapeRef: (el: Konva.Rect | null) => void;
-  onSelect: (s: Space) => void;
+  shapeRef?: React.RefObject<Konva.Rect | null>;
+  onSelect: (space: Space, pos?: { x: number, y: number }) => void;
   onGroupDragEnd: (e: KonvaEventObject<DragEvent>) => void;
   onTransformEnd: () => void;
   setCursor: (c: string) => void;
 }
 
 const StallNode: React.FC<StallNodeProps> = ({
-  space, isAdmin, isSelected, shapeRef, onSelect, onGroupDragEnd, onTransformEnd, setCursor,
+  space, isAdmin, isBrand, isSelected, shapeRef, onSelect, onGroupDragEnd, onTransformEnd, setCursor,
 }) => {
-  const { status, tipo = 'estandar', width: w, height: h, rotation, label, id } = space;
+  const { width: w, height: h, rotation, status, label, id, tipo, marca_ocupante } = space;
   const isPremium = tipo === 'premium';
+  const logoImage = useImage(marca_ocupante?.logo_url);
 
   const theme = (THEME[status] ?? THEME.available)[tipo] ?? THEME.available.estandar;
 
-  // Selected highlight overrides stroke
-  const strokeColor = isSelected ? '#3b82f6' : theme.stroke;
   const strokeW     = isSelected ? 2 : theme.strokeWidth;
 
-  // Font sizes scale with space size — floor at 5px, cap at 12px
   const minDim    = Math.min(w, h);
   const labelSize = Math.max(5, Math.min(10, minDim * 0.30));
+  const circleRadius = Math.min(14, minDim * 0.35);
 
-  // Occupied spaces show the brand name (stored as space.name after API connect)
-  const brandName = status === 'occupied' ? (space.name ?? label ?? id) : (label ?? id);
+  const brandName = status === 'occupied' 
+    ? (marca_ocupante?.nombre_marca ?? space.name ?? label ?? id) 
+    : (label ?? id);
+
+  // For image centering and cropping
+  const imgScale = logoImage ? Math.max((circleRadius * 2) / logoImage.width, (circleRadius * 2) / logoImage.height) : 1;
+
+  // We show premium colors/stars to Admins AND Brands (isBrand)
+  const showPremiumDetails = isAdmin || isBrand;
+
+  // Si es usuario normal, mantenemos un gris muy limpio y estándar
+  const fillColor = (!showPremiumDetails && status === 'available') ? '#f8fafc' : theme.fill;
+  
+  // Highlight de selección (azul) > Neutral (gris) para usuarios > Tema original (oro/verde) para admins/brands
+  const strokeColor = isSelected 
+    ? '#3b82f6' 
+    : (!showPremiumDetails && status !== 'occupied') 
+      ? '#cbd5e1' 
+      : theme.stroke;
 
   return (
     <Group
@@ -75,102 +105,87 @@ const StallNode: React.FC<StallNodeProps> = ({
       draggable={isAdmin}
       onDragStart={() => setCursor('grabbing')}
       onDragEnd={onGroupDragEnd}
-      onClick={() => onSelect(space)}
-      onTap={() => onSelect(space)}
+      onClick={(e) => {
+        const pos = e.target.getStage()?.getPointerPosition();
+        onSelect(space, pos ?? undefined);
+      }}
+      onTap={(e) => {
+        const pos = e.target.getStage()?.getPointerPosition();
+        onSelect(space, pos ?? undefined);
+      }}
       onMouseEnter={() => setCursor(isAdmin ? 'grab' : 'pointer')}
       onMouseLeave={() => setCursor('default')}
     >
-      {/* ── Base rect: Transformer attaches here via shapeRef ── */}
+      {/* ── Fast Native Rect (No heavy shadows or clipFunc) ── */}
       <Rect
         ref={shapeRef}
         width={w} height={h}
         rotation={rotation}
-        fill={theme.fill}
+        fill={status === 'occupied' ? '#ffffff' : fillColor}
         stroke={strokeColor}
         strokeWidth={strokeW}
-        cornerRadius={Math.min(4, minDim * 0.15)}
+        cornerRadius={Math.min(6, minDim * 0.15)}
         onTransformEnd={onTransformEnd}
+        // Very subtle fast shadow only when selected to avoid lag
         shadowEnabled={isSelected}
-        shadowBlur={8}
-        shadowColor="rgba(59,130,246,0.45)"
+        shadowBlur={4}
+        shadowColor="rgba(59,130,246,0.4)"
       />
 
-      {/* ── All decorations in a clipped+rotated Group so nothing overflows ── */}
-      <Group
-        rotation={rotation}
-        clipFunc={(ctx: any) => { ctx.rect(0, 0, w, h); }}
-        listening={false}
-      >
-        {/* Top accent stripe */}
-        <Rect
-          x={0} y={0}
-          width={w} height={Math.min(h * 0.22, 3.8)}
-          fill={
-            status === 'occupied'
-              ? (isPremium ? 'rgba(251,191,36,0.55)' : 'rgba(148,163,184,0.3)')
-              : status === 'pending'
-              ? 'rgba(250,204,21,0.6)'
-              : isPremium
-              ? 'rgba(251,191,36,0.5)'
-              : 'rgba(74,222,128,0.45)'
-          }
-        />
-
-        {/* Premium badge — safely inside clip bounds */}
-        {isPremium && (
-          <Rect
-            x={w - 9} y={1}
-            width={8} height={4}
-            fill="#d97706"
-            cornerRadius={1}
-            opacity={1}
-          />
+      <Group rotation={rotation} listening={false}>
+        {/* Occupied Center Circle (Photo or Initials) */}
+        {status === 'occupied' ? (
+          <Group x={w / 2} y={h / 2}>
+            {logoImage ? (
+              <Circle
+                radius={circleRadius}
+                fillPatternImage={logoImage}
+                fillPatternOffset={{ x: logoImage.width / 2, y: logoImage.height / 2 }}
+                fillPatternScale={{ x: imgScale, y: imgScale }}
+                fillPatternRepeat="no-repeat"
+              />
+            ) : (
+              <>
+                <Circle radius={circleRadius} fill="#fce7f3" />
+                <Text
+                  x={-circleRadius} y={-circleRadius}
+                  width={circleRadius * 2} height={circleRadius * 2}
+                  text={brandName.substring(0, 2).toUpperCase()}
+                  align="center" verticalAlign="middle"
+                  fontSize={circleRadius}
+                  fontStyle="bold"
+                  fill="#db2777"
+                  fontFamily="Inter, sans-serif"
+                />
+              </>
+            )}
+          </Group>
+        ) : (
+          <>
+            {/* Visual indicator for Admin (Premium star) */}
+            {isAdmin && isPremium && status === 'available' && (
+              <Text
+                x={w - 10} y={2}
+                text="★"
+                fontSize={8}
+                fill="#d97706"
+              />
+            )}
+            
+            {/* Label for non-occupied spaces */}
+            <Text
+              x={0} y={0}
+              text={brandName}
+              width={w} height={h}
+              align="center" verticalAlign="middle"
+              fontSize={labelSize}
+              fontStyle="600"
+              fontFamily="Inter, Arial, sans-serif"
+              fill={status === 'pending' ? '#854d0e' : '#475569'}
+              padding={2}
+            />
+          </>
         )}
-
-        {/* Pending dashed ring */}
-        {status === 'pending' && (
-          <Rect
-            x={1} y={1}
-            width={w - 2} height={h - 2}
-            fill="transparent"
-            stroke="#ca8a04"
-            strokeWidth={1.5}
-            dash={[3, 2]}
-          />
-        )}
-
-        {/* Occupied texture */}
-        {status === 'occupied' && (
-          <Rect
-            x={0} y={0}
-            width={w} height={h}
-            fill="transparent"
-            stroke={isPremium ? 'rgba(217,119,6,0.2)' : 'rgba(148,163,184,0.12)'}
-            strokeWidth={6}
-            dash={[2, 5]}
-          />
-        )}
-
-        {/* Label / brand name */}
-        <Text
-          x={0} y={0}
-          text={brandName}
-          width={w} height={h}
-          align="center" verticalAlign="middle"
-          fontSize={labelSize}
-          fontStyle={status === 'occupied' ? 'bold' : '600'}
-          fontFamily="Inter, Arial, sans-serif"
-          fill={
-            status === 'occupied'
-              ? (isPremium ? '#fde68a' : '#e2e8f0')
-              : status === 'pending'
-              ? '#713f12'
-              : '#1e293b'
-          }
-          padding={2}
-          wrap="none"
-          ellipsis={true}
-        />
       </Group>
     </Group>
   );
@@ -228,6 +243,8 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
   const selectSpace = useMapStore((s) => s.selectSpace);
   const generateLayout = useMapStore((s) => s.generateLayout);
   const saveLayout = useMapStore((s) => s.saveLayout);
+  const setSpaces = useMapStore((s) => s.setSpaces);
+  const { isAuthenticated, userType } = useUserStore();
 
   const [stallCount, setStallCount] = useState(27);
   const [isLegendOpen, setIsLegendOpen] = useState(false);
@@ -243,11 +260,62 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
   const [zoomVisible, setZoomVisible] = useState(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ── Sync with API ────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const fetchSpaces = async () => {
+      try {
+        const res = await api.get('/espacios');
+        const dbEspacios = res.data;
+        
+        // Merge layout spaces with DB spaces by label (numero_espacio)
+        const updatedSpaces = useMapStore.getState().spaces.map(localSpace => {
+          const dbSpace = dbEspacios.find((e: any) => e.numero_espacio === localSpace.label);
+          if (dbSpace) {
+            // Find the accepted solicitud to get the marca
+            const acceptedSol = dbSpace.solicitudes?.find((s: any) => s.estado === 'aceptada');
+            const marca_ocupante = acceptedSol ? acceptedSol.marcas : undefined;
+            
+            return {
+              ...localSpace,
+              dbId: dbSpace.id_espacio,
+              status: dbSpace.estado === 'disponible' ? 'available' : dbSpace.estado === 'ocupado' ? 'occupied' : 'pending',
+              precio: Number(dbSpace.precio),
+              marca_ocupante
+            };
+          }
+          return localSpace;
+        });
+        setSpaces(updatedSpaces);
+      } catch (error) {
+        console.error('Error fetching spaces', error);
+      }
+    };
+    fetchSpaces();
+  }, [setSpaces]);
+
   const showZoom = () => {
     setZoomVisible(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => setZoomVisible(false), 2500);
   };
+
+  // ── Auto-position popover for Search ─────────────────────────────────────────
+  useEffect(() => {
+    const storeState = useMapStore.getState();
+    if (selectedSpace && storeState.popoverPos === null) {
+      const stage = stageRef.current;
+      const rect = shapeRefs.current.get(selectedSpace.id);
+      if (stage && rect) {
+        const absPos = rect.getAbsolutePosition();
+        // Centre the popover above the rect based on its current scale
+        const scaledWidth = (rect.width() * stage.scaleX());
+        storeState.selectSpace(selectedSpace, { 
+          x: absPos.x + (scaledWidth / 2), 
+          y: absPos.y 
+        });
+      }
+    }
+  }, [selectedSpace]);
 
   // ── Keyboard support for deletion ───────────────────────────────────────────
   useEffect(() => {
@@ -416,8 +484,8 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
       >
         {/* ── Layer 1: static background ── */}
         <Layer listening={false}>
-          {/* Cream fill covers the whole stage DOM canvas */}
-          <Rect x={-5000} y={-5000} width={10000} height={10000} fill="#f5f1ea" />
+          {/* Base fill covers the whole stage DOM canvas - Softer modern color instead of technical beige */}
+          <Rect x={-5000} y={-5000} width={10000} height={10000} fill="#f8fafc" />
 
           {/* SVG floor plan, clipped to hide the outer CAD border paths */}
           {bgImage && (
@@ -426,7 +494,7 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
                 image={bgImage}
                 x={0} y={0}
                 width={SVG_W} height={SVG_H}
-                opacity={0.92}
+                opacity={0.8} // slightly faded so the stalls pop more
               />
             </Group>
           )}
@@ -439,6 +507,7 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
               key={space.id}
               space={space}
               isAdmin={isAdmin}
+              isBrand={userType === 'brand'}
               isSelected={selectedSpace?.id === space.id}
               shapeRef={(el) => {
                 if (el) shapeRefs.current.set(space.id, el);
@@ -721,8 +790,8 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
         </div>
       )}
 
-      {/* ── Standalone Legend (bottom-right, non-admin only) ── */}
-      {!isAdmin && (
+      {/* ── Standalone Legend (bottom-right, non-admin only, but only for vendors) ── */}
+      {!isAdmin && isAuthenticated && (
         <div style={{
           position: 'absolute', bottom: 20, right: 20,
           background: 'rgba(255,255,255,0.92)',

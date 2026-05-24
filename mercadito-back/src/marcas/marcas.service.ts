@@ -21,12 +21,21 @@ export class MarcasService {
         });
     }
 
-    // Admin: ver todas las marcas
+    // Admin: ver todas las marcas (incluye solicitudes, espacios y mercaditos para vista detallada)
     async findAll() {
         return this.prisma.marcas.findMany({
             include: {
                 usuarios: {
                     select: { id_usuario: true, nombre: true, correo: true },
+                },
+                solicitudes: {
+                    include: {
+                        espacios: {
+                            include: {
+                                mercaditos: true,
+                            },
+                        },
+                    },
                 },
             },
             orderBy: { fecha_creacion: 'desc' },

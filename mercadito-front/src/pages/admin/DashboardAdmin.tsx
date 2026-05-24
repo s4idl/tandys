@@ -355,7 +355,7 @@ const DashboardAdmin: React.FC = () => {
                       {icon}
                     </div>
                     <div className="dash-feed-content">
-                      <h4 className="dash-feed-title">Local #{req.id_espacio} - Marca #{req.id_marca}</h4>
+                      <h4 className="dash-feed-title">Espacio #{req.espacios?.numero_espacio ?? req.id_espacio} — {req.marcas?.nombre_marca ?? `Marca #${req.id_marca}`}</h4>
                       <p className="dash-feed-desc">{statusText}</p>
                     </div>
                     <div className="dash-feed-time" style={{ textAlign: 'right' }}>

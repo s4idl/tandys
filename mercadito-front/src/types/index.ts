@@ -19,6 +19,7 @@ export interface Space {
     status: SpaceStatus;
     label?: string;      // short display label on the rect
     name?: string;       // longer name shown in sidebar
+    marca_ocupante?: Marca; // brand occupying the space (if any)
 }
 
 export interface Marca {

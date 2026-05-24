@@ -46,6 +46,129 @@ body,
   object-fit: contain;
 }
 
+/* Navbar Search Overlay */
+.navbar-search-overlay {
+  position: fixed;
+  bottom: 130px; /* Right above the navbar */
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 1000;
+  pointer-events: none; /* Let clicks pass through if not on container */
+}
+
+.navbar-search-container {
+  width: 90%;
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.navbar-search-input-wrap {
+  display: flex;
+  align-items: center;
+  background: rgba(241, 245, 249, 0.8);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+.navbar-search-icon {
+  color: #64748b;
+  margin-right: 10px;
+}
+
+.navbar-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  color: #1e293b;
+  font-family: inherit;
+}
+
+.navbar-search-input::placeholder {
+  color: #94a3b8;
+}
+
+.navbar-search-results {
+  max-height: 250px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.navbar-search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.navbar-search-result-item:hover {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  transform: translateY(-1px);
+}
+
+.navbar-search-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fce7f3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #db2777;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.navbar-search-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.navbar-search-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar-search-info strong {
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.navbar-search-info span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.navbar-search-empty {
+  padding: 16px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
 /* ── Navbar — Floating Tab Bar ────────────────────────────────────────────── */
 .navbar-tabbar {
   position: fixed;
@@ -56,8 +179,10 @@ body,
 
   display: flex;
   align-items: center;
+  justify-content: space-evenly;
   gap: 6px;
   padding: 10px 16px;
+  min-width: 340px;
 
   background: rgba(255, 255, 255, 0.80);
   backdrop-filter: blur(20px) saturate(160%);
@@ -81,8 +206,8 @@ body,
   justify-content: center;
   gap: 3px;
 
-  min-width: 70px;
-  padding: 10px 18px;
+  min-width: 60px;
+  padding: 8px 10px;
   border: none;
   border-radius: 9999px;
   background: transparent;
