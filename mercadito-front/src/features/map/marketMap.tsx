@@ -487,6 +487,80 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
 
   const stopPan = () => { isPanning.current = false; setCursor('default'); };
 
+  // ── Mobile Touch: Pinch to Zoom & Pan ───────────────────────────────────────
+  const lastCenter = useRef<{ x: number, y: number } | null>(null);
+  const lastDist = useRef<number>(0);
+
+  const getDistance = (p1: { x: number, y: number }, p2: { x: number, y: number }) => {
+    return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+  };
+  const getCenter = (p1: { x: number, y: number }, p2: { x: number, y: number }) => {
+    return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+  };
+
+  const handleTouchStart = (e: KonvaEventObject<TouchEvent>) => {
+    if (e.target !== e.target.getStage()) return;
+    e.evt.preventDefault();
+    const touch1 = e.evt.touches[0];
+    const touch2 = e.evt.touches[1];
+    if (touch1 && touch2) {
+      const p1 = { x: touch1.clientX, y: touch1.clientY };
+      const p2 = { x: touch2.clientX, y: touch2.clientY };
+      lastCenter.current = getCenter(p1, p2);
+      lastDist.current = getDistance(p1, p2);
+    } else if (touch1) {
+      isPanning.current = true;
+      const stage = stageRef.current!;
+      const container = stage.container().getBoundingClientRect();
+      panLast.current = { x: touch1.clientX - container.left, y: touch1.clientY - container.top };
+    }
+  };
+
+  const handleTouchMove = (e: KonvaEventObject<TouchEvent>) => {
+    e.evt.preventDefault();
+    const touch1 = e.evt.touches[0];
+    const touch2 = e.evt.touches[1];
+    const stage = stageRef.current!;
+    const container = stage.container().getBoundingClientRect();
+
+    if (touch1 && touch2) {
+      const p1 = { x: touch1.clientX, y: touch1.clientY };
+      const p2 = { x: touch2.clientX, y: touch2.clientY };
+      const dist = getDistance(p1, p2);
+      if (!lastDist.current) lastDist.current = dist;
+      const newCenter = getCenter(p1, p2);
+      const stageCenter = { x: newCenter.x - container.left, y: newCenter.y - container.top };
+      const pointTo = {
+        x: (stageCenter.x - stage.x()) / stage.scaleX(),
+        y: (stageCenter.y - stage.y()) / stage.scaleX(),
+      };
+      const scale = stage.scaleX() * (dist / lastDist.current);
+      const next = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale));
+      stage.scale({ x: next, y: next });
+      const dx = newCenter.x - (lastCenter.current?.x || newCenter.x);
+      const dy = newCenter.y - (lastCenter.current?.y || newCenter.y);
+      stage.position({
+        x: stageCenter.x - pointTo.x * next + dx,
+        y: stageCenter.y - pointTo.y * next + dy,
+      });
+      lastDist.current = dist;
+      lastCenter.current = newCenter;
+      setZoomLevel(Math.round(next * 100));
+      showZoom();
+    } else if (touch1 && isPanning.current) {
+      const p = { x: touch1.clientX - container.left, y: touch1.clientY - container.top };
+      const dx = p.x - panLast.current.x;
+      const dy = p.y - panLast.current.y;
+      stage.position({ x: stage.x() + dx, y: stage.y() + dy });
+      panLast.current = p;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    lastDist.current = 0;
+    lastCenter.current = null;
+    isPanning.current = false;
+  };
   // ── Click on empty stage: deselect ─────────────────────────────────────────
   const handleClick = (e: KonvaEventObject<MouseEvent>) => {
     if (e.target === e.target.getStage()) selectSpace(null);
