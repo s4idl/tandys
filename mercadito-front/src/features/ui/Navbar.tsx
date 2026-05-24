@@ -104,12 +104,16 @@ const Navbar: React.FC<NavbarProps> = ({ userType }) => {
       )
     : [];
 
+  const isMapPage = location.pathname === '/';
+
   return (
     <>
       {/* ── Logo — fixed top-left ─────────────────────────────────────────── */}
-      <div className="navbar-logo">
-        <img src={tandyslogo} alt="Tandys" className="navbar-logo-img" />
-      </div>
+      {isMapPage && (
+        <div className="navbar-logo">
+          <img src={tandyslogo} alt="Tandys" className="navbar-logo-img" />
+        </div>
+      )}
 
       {/* ── Search Bar Overlay ───────────────────────────────────────────── */}
       {showSearch && (

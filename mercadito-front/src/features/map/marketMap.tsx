@@ -938,19 +938,7 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
 
       {/* ── Standalone Legend (bottom-right, non-admin only, but only for vendors) ── */}
       {!isAdmin && isAuthenticated && (
-        <div style={{
-          position: 'absolute', bottom: 20, right: 20,
-          background: 'rgba(255,255,255,0.92)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          border: '1px solid rgba(229,231,235,0.8)',
-          borderRadius: 20,
-          padding: '16px 18px',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.10), 0 1px 6px rgba(0,0,0,0.06)',
-          zIndex: 10,
-          fontFamily: 'Inter, Arial, sans-serif',
-          minWidth: 160,
-        }}>
+        <div className="map-legend-standalone">
           <LegendContent />
         </div>
       )}

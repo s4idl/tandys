@@ -370,6 +370,27 @@ body,
   animation: fadeIn 0.15s ease;
 }
 
+@media (max-width: 640px) {
+  /* Fix dev-role buttons inside settings */
+  .dev-role-group {
+    flex-direction: column;
+  }
+  
+  /* Make sure the control panels in marketMap don't overflow */
+  .admin-panel {
+    top: 60px;
+    left: 12px;
+    width: auto;
+    max-width: calc(100vw - 24px);
+  }
+
+  /* Lift the map legend above the mobile navbar */
+  .map-legend-standalone {
+    bottom: 110px !important;
+    right: 12px !important;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -706,4 +727,21 @@ body,
   color: #ef4444 !important;
   text-transform: none !important;
   letter-spacing: 0 !important;
+}
+
+/* ── Standalone Map Legend ────────────────────────────────────────────────── */
+.map-legend-standalone {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+  border-radius: 20px;
+  padding: 16px 18px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.10), 0 1px 6px rgba(0, 0, 0, 0.06);
+  z-index: 10;
+  font-family: 'Inter', Arial, sans-serif;
+  min-width: 160px;
 }
