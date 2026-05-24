@@ -16,6 +16,7 @@ import {
   DollarSign,
   Tag,
   Plus,
+  LogOut,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/axios';
@@ -267,6 +268,7 @@ const SolicitudesSection: React.FC<{ solicitudes: Solicitud[] }> = ({ solicitude
 // ── Main page ──────────────────────────────────────────────────────────────────
 const Perfil: React.FC = () => {
   const navigate = useNavigate();
+  const logout = useUserStore((s) => s.logout);
   const [data, setData] = useState<PerfilData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -383,6 +385,15 @@ const Perfil: React.FC = () => {
               </div>
               <div className="prf-stat-lbl">Solicitudes</div>
             </div>
+            <button
+              id="btn-cerrar-sesion"
+              className="prf-logout-btn"
+              onClick={handleLogout}
+              title="Cerrar sesión"
+            >
+              <LogOut size={14} />
+              Cerrar sesión
+            </button>
           </div>
 
           <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>

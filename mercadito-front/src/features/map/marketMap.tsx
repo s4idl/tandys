@@ -4,7 +4,6 @@ import { Stage, Layer, Rect, Circle, Image as KonvaImage, Text, Group, Transform
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type Konva from 'konva';
 import { useMapStore } from '../../store/mapStore';
-import { useUserStore } from '../../store/userStore';
 import type { Space } from '../../types';
 import svgUrl from '../../assets/mapa-maestro.svg';
 import api from '../../services/axios';
@@ -28,15 +27,15 @@ interface MarketMapProps { isAdmin?: boolean; }
 const THEME = {
   available: {
     estandar: { fill: '#f8fafc', stroke: '#86efac', strokeWidth: 1.4 },
-    premium:  { fill: '#fffbeb', stroke: '#fcd34d', strokeWidth: 1.6 },
+    premium: { fill: '#fffbeb', stroke: '#fcd34d', strokeWidth: 1.6 },
   },
   occupied: {
     estandar: { fill: '#1e293b', stroke: '#334155', strokeWidth: 1 },
-    premium:  { fill: '#2d1a08', stroke: '#92400e', strokeWidth: 1.5 },
+    premium: { fill: '#2d1a08', stroke: '#92400e', strokeWidth: 1.5 },
   },
   pending: {
     estandar: { fill: '#fefce8', stroke: '#fde047', strokeWidth: 1.4 },
-    premium:  { fill: '#fef3c7', stroke: '#f59e0b', strokeWidth: 1.6 },
+    premium: { fill: '#fef3c7', stroke: '#f59e0b', strokeWidth: 1.6 },
   },
 };
 
@@ -73,14 +72,14 @@ const StallNode: React.FC<StallNodeProps> = ({
 
   const theme = (THEME[status] ?? THEME.available)[tipo] ?? THEME.available.estandar;
 
-  const strokeW     = isSelected ? 2 : theme.strokeWidth;
+  const strokeW = isSelected ? 2 : theme.strokeWidth;
 
-  const minDim    = Math.min(w, h);
+  const minDim = Math.min(w, h);
   const labelSize = Math.max(5, Math.min(10, minDim * 0.30));
   const circleRadius = Math.min(14, minDim * 0.35);
 
-  const brandName = status === 'occupied' 
-    ? (marca_ocupante?.nombre_marca ?? space.name ?? label ?? id) 
+  const brandName = status === 'occupied'
+    ? (marca_ocupante?.nombre_marca ?? space.name ?? label ?? id)
     : (label ?? id);
 
   // For image centering and cropping
@@ -91,12 +90,12 @@ const StallNode: React.FC<StallNodeProps> = ({
 
   // Si es usuario normal, mantenemos un gris muy limpio y estándar
   const fillColor = (!showPremiumDetails && status === 'available') ? '#f8fafc' : theme.fill;
-  
+
   // Highlight de selección (azul) > Neutral (gris) para usuarios > Tema original (oro/verde) para admins/brands
-  const strokeColor = isSelected 
-    ? '#3b82f6' 
-    : (!showPremiumDetails && status !== 'occupied') 
-      ? '#cbd5e1' 
+  const strokeColor = isSelected
+    ? '#3b82f6'
+    : (!showPremiumDetails && status !== 'occupied')
+      ? '#cbd5e1'
       : theme.stroke;
 
   return (
@@ -171,7 +170,7 @@ const StallNode: React.FC<StallNodeProps> = ({
                 fill="#d97706"
               />
             )}
-            
+
             {/* Label for non-occupied spaces */}
             <Text
               x={0} y={0}
@@ -234,6 +233,13 @@ const LegendContent: React.FC<{ hideTitle?: boolean }> = ({ hideTitle }) => (
 
 
 // ── MarketMap ─────────────────────────────────────────────────────────────────
+// Map backend estado → frontend SpaceStatus
+const estadoToStatus = (estado: string): SpaceStatus => {
+  if (estado === 'ocupado') return 'occupied';
+  if (estado === 'solicitado' || estado === 'pendiente_pago') return 'pending';
+  return 'available';
+};
+
 const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
   const spaces = useMapStore((s) => s.spaces);
   const selectedSpace = useMapStore((s) => s.selectedSpace);
@@ -248,6 +254,30 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
 
   const [stallCount, setStallCount] = useState(27);
   const [isLegendOpen, setIsLegendOpen] = useState(false);
+
+  // ── Sync real DB spaces into the visual map ────────────────────────────────
+  // Reusable: called on mount AND after every generateLayout so dbIds are
+  // always populated even when the store rebuilds the spaces array.
+  const syncFromDB = useCallback(() => {
+    api.get('/espacios')
+      .then(({ data }: { data: any[] }) => {
+        data.forEach((dbSpace) => {
+          const match = useMapStore.getState().spaces.find(
+            (s) => s.label?.toUpperCase() === String(dbSpace.numero_espacio).toUpperCase()
+          );
+          if (!match) return;
+          updateSpace(match.id, {
+            dbId: dbSpace.id_espacio,
+            status: estadoToStatus(dbSpace.estado ?? 'disponible'),
+            precio: dbSpace.precio != null ? Number(dbSpace.precio) : match.precio,
+          });
+        });
+      })
+      .catch(() => { /* silently fail — map stays in local-only mode */ });
+  }, [updateSpace]);
+
+  // Run once on mount
+  useEffect(() => { syncFromDB(); }, [syncFromDB]);
 
   const stageRef = useRef<Konva.Stage>(null);
   const trRef = useRef<Konva.Transformer>(null);
@@ -266,7 +296,7 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
       try {
         const res = await api.get('/espacios');
         const dbEspacios = res.data;
-        
+
         // Merge layout spaces with DB spaces by label (numero_espacio)
         const updatedSpaces = useMapStore.getState().spaces.map(localSpace => {
           const dbSpace = dbEspacios.find((e: any) => e.numero_espacio === localSpace.label);
@@ -274,7 +304,7 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
             // Find the accepted solicitud to get the marca
             const acceptedSol = dbSpace.solicitudes?.find((s: any) => s.estado === 'aceptada');
             const marca_ocupante = acceptedSol ? acceptedSol.marcas : undefined;
-            
+
             return {
               ...localSpace,
               dbId: dbSpace.id_espacio,
@@ -309,9 +339,9 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
         const absPos = rect.getAbsolutePosition();
         // Centre the popover above the rect based on its current scale
         const scaledWidth = (rect.width() * stage.scaleX());
-        storeState.selectSpace(selectedSpace, { 
-          x: absPos.x + (scaledWidth / 2), 
-          y: absPos.y 
+        storeState.selectSpace(selectedSpace, {
+          x: absPos.x + (scaledWidth / 2),
+          y: absPos.y
         });
       }
     }
@@ -720,7 +750,7 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
 
           {/* Generar Layout button */}
           <button
-            onClick={() => generateLayout(stallCount)}
+            onClick={() => { generateLayout(stallCount); setTimeout(syncFromDB, 50); }}
             style={{
               padding: '10px 0', borderRadius: 12, border: 'none',
               background: 'linear-gradient(135deg, #7b1430, #c8748a)',
@@ -772,7 +802,7 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
           </p>
 
           <div style={{ marginTop: 4, paddingTop: 16, borderTop: '1px solid #f3f4f6' }}>
-            <div 
+            <div
               style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
               onClick={() => setIsLegendOpen(!isLegendOpen)}
             >

@@ -66,12 +66,19 @@ const RequestModal: React.FC<RequestModalProps> = ({ isAdmin }) => {
     // Step 3: POST /solicitudes
     const handleConfirm = async () => {
         if (!selectedBrandId) return;
+
+        // Guard: dbId must exist (populated when map syncs with the backend)
+        if (!selectedSpace.dbId) {
+            setError('No se pudo identificar el espacio en la base de datos. Intenta recargar la página.');
+            return;
+        }
+
         setLoading(true);
         setError('');
         try {
             await api.post('/solicitudes', {
                 id_marca:   selectedBrandId,
-                id_espacio: selectedSpace.dbId, // undefined when map isn't connected to DB yet
+                id_espacio: selectedSpace.dbId,
             });
 
             // Mark space as pending locally so it turns yellow immediately

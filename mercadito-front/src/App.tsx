@@ -9,8 +9,8 @@ import Solicitudes from './pages/Solicitudes/Solicitudes';
 import MisMarcas from './pages/miMarca/MisMarcas';
 import Pagos from './pages/pagos/Pagos';
 import Perfil from './pages/perfil/Perfil';
-import DashboardAdmin from './pages/admin/DashboardAdmin';
 import GestionAdmin from './pages/admin/GestionAdmin';
+import DashboardAdmin from './pages/admin/DashboardAdmin';
 import AjustesAdmin from './pages/admin/AjustesAdmin';
 import { useUserStore } from './store/userStore';
 import './App.css';
@@ -85,10 +85,13 @@ const InnerShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
-// ─── Router for Solicitudes ───────────────────────────────────────────────────
-const SolicitudesRouter = () => {
+// ─── Route Wrapper para Solicitudes / Gestión ───────────────────────────────
+const SolicitudesRoute = () => {
   const { userType } = useUserStore();
-  return userType === 'admin' ? <GestionAdmin /> : <Solicitudes />;
+  if (userType === 'admin') {
+    return <GestionAdmin />;
+  }
+  return <Solicitudes />;
 };
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
@@ -102,7 +105,7 @@ function App() {
 
       <Routes>
         <Route path="/" element={<MapPage />} />
-        <Route path="/solicitudes" element={<ProtectedRoute><InnerShell><SolicitudesRouter /></InnerShell></ProtectedRoute>} />
+        <Route path="/solicitudes" element={<ProtectedRoute><InnerShell><SolicitudesRoute /></InnerShell></ProtectedRoute>} />
         <Route path="/pagos" element={<ProtectedRoute><InnerShell><Pagos /></InnerShell></ProtectedRoute>} />
         <Route path="/mi-marca" element={<ProtectedRoute><InnerShell><MisMarcas /></InnerShell></ProtectedRoute>} />
         <Route path="/perfil" element={<ProtectedRoute><InnerShell><Perfil /></InnerShell></ProtectedRoute>} />
