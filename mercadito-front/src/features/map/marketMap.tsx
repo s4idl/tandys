@@ -255,6 +255,7 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
 
   const [stallCount, setStallCount] = useState(27);
   const [isLegendOpen, setIsLegendOpen] = useState(false);
+  const [showSaveToast, setShowSaveToast] = useState(false);
 
   // ── Sync real DB spaces into the visual map ────────────────────────────────
   // Reusable: called on mount AND after every generateLayout so dbIds are
@@ -767,7 +768,11 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
 
           {/* Guardar Layout button */}
           <button
-            onClick={() => { saveLayout(); alert('Layout guardado ✓ (ver consola)'); }}
+            onClick={() => { 
+              saveLayout(); 
+              setShowSaveToast(true);
+              setTimeout(() => setShowSaveToast(false), 3000);
+            }}
             style={{
               padding: '9px 0', borderRadius: 12,
               border: '1px solid #e5e7eb',
@@ -837,6 +842,33 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
           minWidth: 160,
         }}>
           <LegendContent />
+        </div>
+      )}
+      {/* ── Save Layout Toast ─────────────────────────────────────────────────── */}
+      {showSaveToast && (
+        <div style={{
+          position: 'absolute',
+          bottom: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(16, 185, 129, 0.95)',
+          color: 'white',
+          padding: '12px 24px',
+          borderRadius: '12px',
+          fontWeight: '600',
+          fontSize: '14px',
+          boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          animation: 'slideUpFade 0.3s ease-out forwards',
+          zIndex: 100
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Layout guardado exitosamente
         </div>
       )}
 

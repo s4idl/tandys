@@ -396,26 +396,6 @@ const Perfil: React.FC = () => {
             </button>
           </div>
 
-          <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
-            <button 
-              onClick={handleLogout}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px 16px',
-                background: 'rgba(239, 68, 68, 0.1)',
-                color: '#ef4444',
-                border: 'none',
-                borderRadius: '8px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '13px'
-              }}
-            >
-              <XCircle size={14} /> Cerrar Sesión
-            </button>
-          </div>
         </div>
 
         {/* ── Split ────────────────────────────────────────────────────────── */}
