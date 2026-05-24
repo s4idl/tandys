@@ -879,8 +879,8 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
       {/* ── Save Layout Toast ─────────────────────────────────────────────────── */}
       {showSaveToast && (
         <div style={{
-          position: 'absolute',
-          bottom: '24px',
+          position: 'fixed',
+          bottom: '40px',
           left: '50%',
           transform: 'translateX(-50%)',
           background: 'rgba(16, 185, 129, 0.95)',
@@ -895,7 +895,7 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
           alignItems: 'center',
           gap: '8px',
           animation: 'slideUpFade 0.3s ease-out forwards',
-          zIndex: 99999
+          zIndex: 999999
         }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12"></polyline>
