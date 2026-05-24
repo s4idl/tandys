@@ -256,6 +256,7 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
   const [stallCount, setStallCount] = useState(27);
   const [isLegendOpen, setIsLegendOpen] = useState(false);
   const [showSaveToast, setShowSaveToast] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
 
   // ── Sync real DB spaces into the visual map ────────────────────────────────
   // Reusable: called on mount AND after every generateLayout so dbIds are
@@ -272,7 +273,7 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
             id: db.nombre || db.numero_espacio,
             label: db.numero_espacio,
             name: db.nombre || `Local ${db.numero_espacio}`,
-            tipo: 'estandar',
+            tipo: (db.precio != null && Number(db.precio) > 350) ? 'premium' : 'estandar',
             precio: db.precio != null ? Number(db.precio) : 350,
             status: estadoToStatus(db.estado ?? 'disponible'),
             dbId: db.id_espacio,
@@ -779,12 +780,10 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
               const spaces = useMapStore.getState().spaces;
               const hasOccupied = spaces.some(s => s.status !== 'available');
               if (hasOccupied) {
-                const proceed = window.confirm("⚠️ ADVERTENCIA: Hay locales ocupados o con solicitudes. Si regeneras el layout, perderás las marcas que ya estaban asignadas a los espacios antiguos. ¿Estás seguro de que quieres reescribir el mapa?");
-                if (!proceed) return;
+                setShowWarningModal(true);
+              } else {
+                generateLayout(stallCount);
               }
-              generateLayout(stallCount); 
-              // We removed syncFromDB here because we want the new generated spaces
-              // to stay until the user explicitly hits "Guardar Layout".
             }}
             style={{
               padding: '10px 0', borderRadius: 12, border: 'none',
@@ -896,12 +895,80 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
           alignItems: 'center',
           gap: '8px',
           animation: 'slideUpFade 0.3s ease-out forwards',
-          zIndex: 100
+          zIndex: 99999
         }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
           Layout guardado exitosamente
+        </div>
+      )}
+
+      {/* ── Warning Overwrite Modal ───────────────────────────────────────────── */}
+      {showWarningModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 999999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '24px',
+            padding: '32px',
+            maxWidth: '420px',
+            width: '90%',
+            boxShadow: '0 24px 48px rgba(0, 0, 0, 0.2)',
+            textAlign: 'center',
+            animation: 'modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}>
+            <div style={{
+              width: '64px', height: '64px', borderRadius: '32px',
+              background: '#fef2f2', color: '#ef4444',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px',
+              boxShadow: '0 0 0 8px rgba(239, 68, 68, 0.05)'
+            }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <h3 style={{ margin: '0 0 12px', fontSize: '20px', color: '#111827', fontWeight: '700' }}>
+              ¿Reescribir el mapa?
+            </h3>
+            <p style={{ margin: '0 0 24px', fontSize: '14px', color: '#6b7280', lineHeight: 1.5 }}>
+              Hay locales actualmente <strong>ocupados o con solicitudes pendientes</strong>. Si generas un layout nuevo y lo guardas, todos los locales antiguos serán borrados permanentemente junto con sus asignaciones.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button 
+                onClick={() => setShowWarningModal(false)}
+                style={{
+                  padding: '10px 20px', borderRadius: '12px', border: '1px solid #e5e7eb',
+                  background: '#fff', color: '#374151', fontSize: '14px', fontWeight: '600',
+                  cursor: 'pointer', transition: 'all 0.2s', flex: 1
+                }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => {
+                  setShowWarningModal(false);
+                  generateLayout(stallCount);
+                }}
+                style={{
+                  padding: '10px 20px', borderRadius: '12px', border: 'none',
+                  background: '#ef4444', color: '#fff', fontSize: '14px', fontWeight: '600',
+                  cursor: 'pointer', transition: 'all 0.2s', flex: 1,
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)'
+                }}
+              >
+                Sí, Reescribir
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
