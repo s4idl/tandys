@@ -263,19 +263,42 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
   const syncFromDB = useCallback(() => {
     api.get('/espacios')
       .then(({ data }: { data: any[] }) => {
-        data.forEach((dbSpace) => {
-          const match = useMapStore.getState().spaces.find(
-            (s) => s.label?.toUpperCase() === String(dbSpace.numero_espacio).toUpperCase()
-          );
-          if (!match) return;
-          updateSpace(match.id, {
-            dbId: dbSpace.id_espacio,
-            status: estadoToStatus(dbSpace.estado ?? 'disponible'),
-            precio: dbSpace.precio != null ? Number(dbSpace.precio) : match.precio,
+        // Check if there is any space with saved coordinates
+        const hasSavedLayout = data.some(dbSpace => dbSpace.coordenada_x != null);
+
+        if (hasSavedLayout) {
+          // Si el mapa ya se guardó, usamos la geometría de la base de datos
+          const dbSpaces = data.map(db => ({
+            id: db.nombre || db.numero_espacio,
+            label: db.numero_espacio,
+            name: db.nombre || `Local ${db.numero_espacio}`,
+            tipo: 'estandar',
+            precio: db.precio != null ? Number(db.precio) : 350,
+            status: estadoToStatus(db.estado ?? 'disponible'),
+            dbId: db.id_espacio,
+            x: db.coordenada_x ?? 0,
+            y: db.coordenada_y ?? 0,
+            width: db.ancho ?? 60,
+            height: db.alto ?? 40,
+            rotation: db.rotacion ?? 0,
+          })) as any;
+          useMapStore.getState().setSpaces(dbSpaces);
+        } else {
+          // Lógica anterior: solo empatar estado para los predefinidos (POOLS)
+          data.forEach((dbSpace) => {
+            const match = useMapStore.getState().spaces.find(
+              (s) => s.label?.toUpperCase() === String(dbSpace.numero_espacio).toUpperCase()
+            );
+            if (!match) return;
+            updateSpace(match.id, {
+              dbId: dbSpace.id_espacio,
+              status: estadoToStatus(dbSpace.estado ?? 'disponible'),
+              precio: dbSpace.precio != null ? Number(dbSpace.precio) : match.precio,
+            });
           });
-        });
+        }
       })
-      .catch(() => { /* silently fail — map stays in local-only mode */ });
+      .catch((e) => { console.error('Error syncing layout:', e); });
   }, [updateSpace]);
 
   // Run once on mount
@@ -752,7 +775,17 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
 
           {/* Generar Layout button */}
           <button
-            onClick={() => { generateLayout(stallCount); setTimeout(syncFromDB, 50); }}
+            onClick={() => { 
+              const spaces = useMapStore.getState().spaces;
+              const hasOccupied = spaces.some(s => s.status !== 'available');
+              if (hasOccupied) {
+                const proceed = window.confirm("⚠️ ADVERTENCIA: Hay locales ocupados o con solicitudes. Si regeneras el layout, perderás las marcas que ya estaban asignadas a los espacios antiguos. ¿Estás seguro de que quieres reescribir el mapa?");
+                if (!proceed) return;
+              }
+              generateLayout(stallCount); 
+              // We removed syncFromDB here because we want the new generated spaces
+              // to stay until the user explicitly hits "Guardar Layout".
+            }}
             style={{
               padding: '10px 0', borderRadius: 12, border: 'none',
               background: 'linear-gradient(135deg, #7b1430, #c8748a)',

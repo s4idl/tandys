@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Space, SpaceStatus, SpaceTipo } from '../types';
 import { PRECIO_POR_TIPO } from '../types';
+import api from '../services/axios';
 
 // 30% of spaces are premium — determined by index so it's consistent
 const tipoFromIndex = (i: number): SpaceTipo => (i % 3 === 0 ? 'premium' : 'estandar');
@@ -160,8 +161,15 @@ export const useMapStore = create<MapStore>((set, get) => ({
     set({ spaces, selectedSpace: null, lastVariant: variant });
   },
 
-  saveLayout: () =>
-    console.log('[saveLayout]', JSON.stringify(get().spaces, null, 2)),
+  saveLayout: async () => {
+    try {
+      await api.put('/espacios/layout/1', get().spaces);
+      console.log('Layout guardado exitosamente en DB');
+    } catch (e) {
+      console.error('Error al guardar layout', e);
+      alert('Error al guardar el layout. Es posible que intentaras borrar un espacio que ya tiene solicitudes o pagos.');
+    }
+  },
 
   setSpaces: (spaces) => set({ spaces }),
 }));
