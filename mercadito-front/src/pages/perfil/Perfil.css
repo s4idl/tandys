@@ -782,3 +782,35 @@
 .prf-logout-btn:active {
   transform: translateY(0);
 }
+
+/* ── Mobile Overrides ─────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .prf-content {
+    padding: 24px 16px 32px;
+  }
+  .prf-section-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .prf-add-marca-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .prf-brand-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  .prf-socials {
+    justify-content: center;
+  }
+  .prf-sol-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .prf-sol-row {
+    flex-wrap: wrap;
+  }
+  .prf-hero-stats {
+    flex-wrap: wrap;
+  }
+}

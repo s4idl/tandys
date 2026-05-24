@@ -535,8 +535,12 @@ const MarketMap: React.FC<MarketMapProps> = ({ isAdmin = false }) => {
         onMouseMove={handleMouseMove}
         onMouseUp={stopPan}
         onMouseLeave={stopPan}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         onClick={handleClick}
         onDblClick={handleDblClick}
+        onTap={handleClick}
       >
         {/* ── Layer 1: static background ── */}
         <Layer listening={false}>
