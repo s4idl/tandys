@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="mercadito-front/public/logo.svg" alt="Tandys Logo" width="120" />
+<img src="mercadito-front/src/assets/tandyslogo.png" alt="Tandys Logo" width="120" />
 
 # 🌟 Tandys — Mercadito Digital
 
